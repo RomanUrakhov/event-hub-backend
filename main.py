@@ -1,12 +1,14 @@
 import io
 from functools import wraps
 
-from flask import Flask, request, jsonify, g, send_file
+from flask import Flask, request, jsonify, g, send_file, url_for
 
-from src.api.schemas.event import EventCreateRequest, EventUpdateRequest
+from src.api.schemas.event import EventCreateRequest, EventUpdateRequest, EventNotFoundResponse, EventResponse, Image, \
+    EventAdditionalLink, EventParticipant, ListEventsResponse
+from src.domain.event import Event
 from src.domain.user_account import SpecificEventAction
 
-from src.repository.event import FakeEventRepository
+from src.repository.event import FakeEventRepository, EventNotFound
 from src.repository.user_account import FakeUserAccountRepository
 from src.services.auth import TwitchAuthProvider, AuthException
 from src.services.file_manager import FakeFileManager
@@ -14,6 +16,8 @@ from src.usecases.account_cases import login_account, has_event_access, has_syst
 from src.usecases import event_cases, image_cases
 
 app = Flask(__name__)
+
+event_repo = FakeEventRepository(events=[])
 
 
 def require_authentication(func):
@@ -110,13 +114,67 @@ def create_event():
     data = request.get_json()
     event_data = EventCreateRequest(**data)
 
-    event_repo = FakeEventRepository(events=[])
-
     create_event_response = event_cases.create_event(
         event_data=event_data,
         event_repo=event_repo
     )
     return jsonify(create_event_response.model_dump()), 201
+
+
+def __serialize_event_to_response(event: Event) -> EventResponse:
+    response = EventResponse(
+        id_=event.id_,
+        name=event.name,
+        description=event.description,
+        image=Image(
+            id_=event.image_id,
+            resource=f"{url_for('get_event')}/{event.image_id}"
+        ) if event.image_id else None,
+        start_date=event.start_date,
+        end_date=event.end_date,
+        additional_links=[
+            EventAdditionalLink(
+                name=link.name,
+                link=link.link
+            ) for link in event.additional_links
+        ],
+        participants=[
+            EventParticipant(
+                id_=p.id_,
+                name=p.name,
+                avatar_url=p.avatar_url
+            ) for p in event.participants
+        ]
+    )
+    return response
+
+
+@app.route('/api/events', methods=['GET'])
+def get_events():
+    events = event_cases.list_events(
+        event_repo=event_repo
+    )
+    event_responses = []
+    for event in events:
+        event_response = __serialize_event_to_response(event)
+        event_responses.append(event_response)
+    response = ListEventsResponse(
+        events=event_responses
+    )
+    return jsonify(response.model_dump()), 200
+
+
+@app.route('/api/events/<string:event_id>', methods=['GET'])
+def get_event(event_id: str):
+    try:
+        event = event_cases.get_event(
+            event_id,
+            event_repo=event_repo
+        )
+        response = __serialize_event_to_response(event)
+    except EventNotFound:
+        response = EventNotFoundResponse(id_=event_id)
+    return jsonify(response.model_dump()), 200
 
 
 @app.route('/api/events/<event_id>', methods=['PUT'])

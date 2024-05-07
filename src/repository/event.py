@@ -3,6 +3,10 @@ from abc import ABC, abstractmethod
 from src.domain.event import Event
 
 
+class EventNotFound(Exception):
+    pass
+
+
 class IEventRepository(ABC):
     @abstractmethod
     def create_event(self, event: Event) -> None:
@@ -16,8 +20,23 @@ class IEventRepository(ABC):
     def get_by_id(self, event_id: str) -> Event:
         pass
 
+    @abstractmethod
+    def get_all(self) -> list[Event]:
+        pass
+
+
+class FakeSingleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(FakeSingleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
 
 class FakeEventRepository(IEventRepository):
+    __metaclass__ = FakeSingleton
+
     def __init__(self, events: list[Event]):
         self.events = events
 
@@ -36,3 +55,6 @@ class FakeEventRepository(IEventRepository):
                 self.events[i] = event
                 return
         raise Exception(f'Event with id {event.id_} not found')
+
+    def get_all(self) -> list[Event]:
+        return self.events

@@ -1,3 +1,4 @@
+import dataclasses
 from datetime import date
 from uuid import uuid4
 
@@ -6,6 +7,13 @@ class EventAdditionalLink:
     def __init__(self, name: str, link: str):
         self.name = name
         self.link = link
+
+
+@dataclasses.dataclass
+class EventParticipant:
+    id_: str
+    name: str
+    avatar_url: str
 
 
 class EventIcon:
@@ -23,8 +31,8 @@ class Event:
         owner_account_id: str,
         start_date: date,
         end_date: date,
-        additional_links=list[EventAdditionalLink],
-        participant_ids=list[str]
+        additional_links: list[EventAdditionalLink],
+        participants: list[EventParticipant]
     ):
         self.id_ = id_
         self.name = name
@@ -34,7 +42,7 @@ class Event:
         self.start_date = start_date
         self.end_date = end_date
         self.additional_links = additional_links
-        self.participant_ids = participant_ids
+        self.participants = participants
 
     @staticmethod
     def create_new(
@@ -44,8 +52,8 @@ class Event:
         owner_account_id: str,
         start_date: date,
         end_date: date,
-        additional_links=list[EventAdditionalLink],
-        participant_ids=list[str]
+        additional_links: list[EventAdditionalLink],
+        participant_ids: list[str]
     ):
         return Event(
             id_=str(uuid4()).lower(),
@@ -66,8 +74,8 @@ class Event:
         image_id: str,
         start_date: date,
         end_date: date,
-        additional_links=list[EventAdditionalLink],
-        participant_ids=list[str]
+        additional_links: list[EventAdditionalLink],
+        participants: list[EventParticipant]
     ):
         self.name = name
         self.description = description
@@ -75,4 +83,4 @@ class Event:
         self.start_date = start_date
         self.end_date = end_date
         self.additional_links = additional_links
-        self.participant_ids = participant_ids
+        self.participants = participants

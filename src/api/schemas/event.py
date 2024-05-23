@@ -1,14 +1,18 @@
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel, Field, ConfigDict, alias_generators, field_validator, root_validator, model_validator
-
-from src.domain.event import Event
+from pydantic import (
+    AnyHttpUrl,
+    BaseModel,
+    Field,
+    ConfigDict,
+    alias_generators,
+)
 
 
 class EventAdditionalLink(BaseModel):
     name: str
-    link: str
+    link: AnyHttpUrl
 
 
 class EventCreateRequest(BaseModel):
@@ -22,35 +26,23 @@ class EventCreateRequest(BaseModel):
     participant_ids: list[str] = Field(default=[])
 
     model_config = ConfigDict(
-        alias_generator=alias_generators.to_camel,
-        populate_by_name=True
+        alias_generator=alias_generators.to_camel, populate_by_name=True
     )
-
-
-class EventUpdateRequest(BaseModel):
-    id_: str
-    name: str
-    description: str
-    image_id: str
-    start_date: date
-    end_date: date
-    additional_links: list[EventAdditionalLink]
-    participant_ids: list[str]
 
 
 class EventCreateResponse(BaseModel):
     id_: str
 
 
-class EventParticipant(BaseModel):
-    id_: str
-    name: str
-    avatar_url: str
-
-
 class Image(BaseModel):
     id_: str
     resource: str
+
+
+class EventParticipant(BaseModel):
+    id_: str
+    name: str
+    avatar_url: str = Field(default=None)
 
 
 class GetEventRequest(BaseModel):
@@ -61,11 +53,7 @@ class ErrorResponse(BaseModel):
     error_message: str
 
 
-class EventResponse(BaseModel):
-    model_config = ConfigDict(
-        from_attributes=True
-    )
-
+class BaseEventResponse(BaseModel):
     id_: str
     name: str
     description: str
@@ -76,14 +64,14 @@ class EventResponse(BaseModel):
     participants: list[EventParticipant]
 
 
-class EventNotFoundResponse(BaseModel):
-    id_: str
-    message: str = Field(default="Can't found Event with such ID")
+class GetEventResponse(BaseEventResponse):
+    pass
 
 
 class ListEventsResponse(BaseModel):
-    model_config = ConfigDict(
-        from_attributes=True
-    )
+    events: list[BaseEventResponse]
 
-    events: list[EventResponse]
+
+class EventNotFoundResponse(BaseModel):
+    id_: str
+    message: str = Field(default="Can't found Event with such ID")

@@ -11,6 +11,9 @@ class AccountNotFoundException(Exception):
     pass
 
 
+UsersMap = dict[str, UserAccount]
+
+
 class IUserAccountRepository(ABC):
     @abstractmethod
     def create_account(self, user_account: UserAccount):
@@ -24,6 +27,10 @@ class IUserAccountRepository(ABC):
     def get_by_id(self, id_: str) -> UserAccount:
         pass
 
+    @abstractmethod
+    def get_map_by_participant_ids(ids: list[str]) -> UsersMap:
+        pass
+
 
 class FakeUserAccountRepository(IUserAccountRepository):
     def __init__(self):
@@ -33,7 +40,14 @@ class FakeUserAccountRepository(IUserAccountRepository):
         self.accounts.append(user_account)
 
     def get_by_external_id(self, external_user_id: str) -> UserAccount:
-        return next((account for account in self.accounts if account.external_user_id == external_user_id), None)
+        return next(
+            (
+                account
+                for account in self.accounts
+                if account.external_user_id == external_user_id
+            ),
+            None,
+        )
 
     def get_by_id(self, id_: str) -> UserAccount:
         return next((account for account in self.accounts if account.id_ == id_), None)

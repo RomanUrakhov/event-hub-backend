@@ -18,7 +18,9 @@ class AccountNotFoundException(Exception):
     pass
 
 
-def _create_login_response(auth_data: AuthPayload, user_account: UserAccount) -> LoginAccountResponse:
+def _create_login_response(
+    auth_data: AuthPayload, user_account: UserAccount
+) -> LoginAccountResponse:
     return LoginAccountResponse(
         access_token=auth_data.access_token,
         refresh_token=auth_data.refresh_token,
@@ -31,7 +33,7 @@ def _create_login_response(auth_data: AuthPayload, user_account: UserAccount) ->
 def login_account(
     auth_code: str,
     auth_provider: IAuthProvider,
-    user_account_repo: IUserAccountRepository
+    user_account_repo: IUserAccountRepository,
 ) -> LoginAccountResponse:
     auth_data = auth_provider.authenticate_user(auth_code)
 
@@ -41,7 +43,8 @@ def login_account(
     if user_account:
         return _create_login_response(auth_data, user_account)
     new_user_account = UserAccount.create_new(
-        external_user_id=auth_data.user_payload.external_id
+        external_user_id=auth_data.user_payload.external_id,
+        avatar_url=auth_data.user_payload.avatar,
     )
     user_account_repo.create_account(new_user_account)
 
@@ -49,8 +52,7 @@ def login_account(
 
 
 def has_system_access(
-    user_id: str,
-    user_account_repository: IUserAccountRepository
+    user_id: str, user_account_repository: IUserAccountRepository
 ) -> bool:
     user = user_account_repository.get_by_id(user_id)
     return user.can_create_event()
@@ -60,7 +62,7 @@ def has_event_access(
     user_id: str,
     event_id: str,
     action: SpecificEventAction,
-    user_account_repository: IUserAccountRepository
+    user_account_repository: IUserAccountRepository,
 ) -> bool:
     user = user_account_repository.get_by_id(user_id)
     return user.can_perform_action_on_event(event_id, action)

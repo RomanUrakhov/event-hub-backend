@@ -13,7 +13,7 @@ class EventAdditionalLink:
 class EventParticipant:
     id_: str
     name: str
-    avatar_url: str
+    twitch_channel_link: str
 
 
 class EventIcon:
@@ -32,7 +32,7 @@ class Event:
         start_date: date,
         end_date: date,
         additional_links: list[EventAdditionalLink],
-        participants: list[EventParticipant]
+        participants: list[EventParticipant],
     ):
         self.id_ = id_
         self.name = name
@@ -53,7 +53,7 @@ class Event:
         start_date: date,
         end_date: date,
         additional_links: list[EventAdditionalLink],
-        participant_ids: list[str]
+        participant_ids: list[str],
     ):
         return Event(
             id_=str(uuid4()).lower(),
@@ -64,7 +64,7 @@ class Event:
             start_date=start_date,
             end_date=end_date,
             additional_links=additional_links,
-            participant_ids=participant_ids
+            participant_ids=participant_ids,
         )
 
     def update(
@@ -75,7 +75,7 @@ class Event:
         start_date: date,
         end_date: date,
         additional_links: list[EventAdditionalLink],
-        participants: list[EventParticipant]
+        participants: list[EventParticipant],
     ):
         self.name = name
         self.description = description

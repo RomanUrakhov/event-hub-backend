@@ -6,7 +6,7 @@ import requests
 from jwt import InvalidTokenError
 from jwt.api_jwt import decode
 
-import config
+import src.config as config
 
 
 class AuthException(Exception):
@@ -30,18 +30,18 @@ class AuthPayload(NamedTuple):
 
     def to_dict(self):
         return {
-            'access_token': self.access_token,
-            'refresh_token': self.refresh_token,
-            'user_payload': {
-                'external_id': self.user_payload.external_id,
-                'user_avatar': self.user_payload.avatar,
-                'user_name': self.user_payload.name,
-            }
+            "access_token": self.access_token,
+            "refresh_token": self.refresh_token,
+            "user_payload": {
+                "external_id": self.user_payload.external_id,
+                "user_avatar": self.user_payload.avatar,
+                "user_name": self.user_payload.name,
+            },
         }
 
 
 class IAuthProvider(ABC):
-    OPENID_CONFIG_URL_TEMPLATE = 'https://{server}/.well-known/openid-configuration'
+    OPENID_CONFIG_URL_TEMPLATE = "https://{server}/.well-known/openid-configuration"
 
     @abstractmethod
     def authenticate_user(self, code: str) -> AuthPayload:
@@ -53,16 +53,16 @@ class IAuthProvider(ABC):
 
 
 class TwitchAuthProvider(IAuthProvider):
-    AUTH_SERVER = 'id.twitch.tv/oauth2'
-    TOKEN_ENDPOINT = f'https://{AUTH_SERVER}/token'
+    AUTH_SERVER = "id.twitch.tv/oauth2"
+    TOKEN_ENDPOINT = f"https://{AUTH_SERVER}/token"
 
     def authenticate_user(self, code: str) -> AuthPayload:
         payload = {
-            'client_id': config.TWITCH_CLIENT_ID,
-            'client_secret': config.TWITCH_CLIENT_SECRET,
-            'code': code,
-            'grant_type': 'authorization_code',
-            'redirect_uri': config.TWITCH_REDIRECT_URI,
+            "client_id": config.TWITCH_CLIENT_ID,
+            "client_secret": config.TWITCH_CLIENT_SECRET,
+            "code": code,
+            "grant_type": "authorization_code",
+            "redirect_uri": config.TWITCH_REDIRECT_URI,
         }
 
         try:
@@ -70,23 +70,23 @@ class TwitchAuthProvider(IAuthProvider):
             response.raise_for_status()
             auth_data = response.json()
 
-            id_token = auth_data.get('id_token')
+            id_token = auth_data.get("id_token")
 
-            decoded_token = jwt.decode(id_token, options={'verify_signature': False})
-            user_avatar = decoded_token.get('picture')
-            user_username = decoded_token.get('preferred_username')
+            decoded_token = jwt.decode(id_token, options={"verify_signature": False})
+            user_avatar = decoded_token.get("picture")
+            user_username = decoded_token.get("preferred_username")
 
             return AuthPayload(
-                access_token=auth_data['id_token'],
-                refresh_token=auth_data['refresh_token'],
+                access_token=auth_data["id_token"],
+                refresh_token=auth_data["refresh_token"],
                 user_payload=UserPayload(
-                    external_id=decoded_token['sub'],
+                    external_id=decoded_token["sub"],
                     avatar=user_avatar,
-                    name=user_username
-                )
+                    name=user_username,
+                ),
             )
         except Exception:
-            raise TwitchAuthException('Failed to authenticate user')
+            raise TwitchAuthException("Failed to authenticate user")
 
     def validate_token(self, token: str) -> UserPayload:
         oidc_config = requests.get(
@@ -106,10 +106,10 @@ class TwitchAuthProvider(IAuthProvider):
                 audience=config.TWITCH_CLIENT_ID,
             )
         except InvalidTokenError as e:
-            raise AuthException('Invalid token') from e
+            raise AuthException("Invalid token") from e
 
         return UserPayload(
-            external_id=auth_payload['sub'],
-            avatar=auth_payload['picture'],
-            name=auth_payload['preferred_username']
+            external_id=auth_payload["sub"],
+            avatar=auth_payload["picture"],
+            name=auth_payload["preferred_username"],
         )

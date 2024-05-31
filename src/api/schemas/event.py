@@ -1,77 +1,44 @@
 from datetime import date
-from typing import Optional
+from flask import url_for
+from pydantic import BaseModel, AnyUrl
 
-from pydantic import (
-    AnyHttpUrl,
-    BaseModel,
-    Field,
-    ConfigDict,
-    alias_generators,
-)
+from src.application.use_cases.dto.event import EventDTO
+
+
+class Image(BaseModel):
+    id: str
+    url: str
 
 
 class EventAdditionalLink(BaseModel):
     name: str
-    link: AnyHttpUrl
+    url: AnyUrl
 
 
-class EventCreateRequest(BaseModel):
+class GetEventByIdResponse(BaseModel):
+    id: str
     name: str
-    description: str
-    image_id: str | None = Field(default=None)
-    owner_account_id: str
-    start_date: date
-    end_date: date
-    additional_links: list[EventAdditionalLink] = Field(default=[])
-    participant_ids: list[str] = Field(default=[])
-
-    model_config = ConfigDict(
-        alias_generator=alias_generators.to_camel, populate_by_name=True
-    )
-
-
-class EventCreateResponse(BaseModel):
-    id_: str
-
-
-class Image(BaseModel):
-    id_: str
-    resource: str
-
-
-class EventParticipant(BaseModel):
-    id_: str
-    name: str
-    avatar_url: str = Field(default=None)
-
-
-class GetEventRequest(BaseModel):
-    id_: str
-
-
-class ErrorResponse(BaseModel):
-    error_message: str
-
-
-class BaseEventResponse(BaseModel):
-    id_: str
-    name: str
-    description: str
-    image: Optional[Image] = None
+    image: Image | None
+    description: str | None
     start_date: date
     end_date: date
     additional_links: list[EventAdditionalLink]
-    participants: list[EventParticipant]
 
-
-class GetEventResponse(BaseEventResponse):
-    pass
-
-
-class ListEventsResponse(BaseModel):
-    events: list[BaseEventResponse]
-
-
-class EventNotFoundResponse(BaseModel):
-    id_: str
-    message: str = Field(default="Can't found Event with such ID")
+    @classmethod
+    def from_dto(cls, dto: EventDTO) -> "GetEventByIdResponse":
+        return cls(
+            id=dto.id,
+            name=dto.name,
+            image=(
+                Image(id=dto.image_id, url=url_for("misc.get_image"))
+                if dto.image_id
+                else None
+            ),
+            description=dto.description,
+            start_date=dto.start_date,
+            end_date=dto.end_date,
+            additional_links=[
+                EventAdditionalLink(name=li.name, url=li.url)
+                for li in dto.additional_links
+            ],
+        )

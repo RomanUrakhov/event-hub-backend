@@ -1,9 +1,7 @@
 from typing import NamedTuple
 
-from src.domain.user_account import UserAccount, SpecificEventAction
-
-from src.repository.user_account import IUserAccountRepository
-from src.services.auth import IAuthProvider, AuthPayload
+from src.application.interfaces.repositories.account import IAccountRepository
+from src.infrastructure.services.auth import AuthPayload, IAuthProvider
 
 
 class LoginAccountResponse(NamedTuple):
@@ -33,7 +31,7 @@ def _create_login_response(
 def login_account(
     auth_code: str,
     auth_provider: IAuthProvider,
-    user_account_repo: IUserAccountRepository,
+    user_account_repo: IAccountRepository,
 ) -> LoginAccountResponse:
     auth_data = auth_provider.authenticate_user(auth_code)
 
@@ -52,7 +50,7 @@ def login_account(
 
 
 def has_system_access(
-    user_id: str, user_account_repository: IUserAccountRepository
+    user_id: str, user_account_repository: IAccountRepository
 ) -> bool:
     user = user_account_repository.get_by_id(user_id)
     return user.can_create_event()
@@ -62,7 +60,7 @@ def has_event_access(
     user_id: str,
     event_id: str,
     action: SpecificEventAction,
-    user_account_repository: IUserAccountRepository,
+    user_account_repository: IAccountRepository,
 ) -> bool:
     user = user_account_repository.get_by_id(user_id)
     return user.can_perform_action_on_event(event_id, action)

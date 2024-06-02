@@ -1,6 +1,9 @@
 from datetime import date
 from flask import url_for
-from pydantic import BaseModel, AnyUrl
+from pydantic import (
+    BaseModel,
+    AnyUrl,
+)
 
 from src.application.use_cases.dto.event import EventDTO
 

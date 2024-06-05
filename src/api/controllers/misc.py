@@ -1,14 +1,14 @@
-from flask import Blueprint
+from flask import Blueprint, current_app, send_from_directory
 
 
 def create_misc_blueprint():
     bp = Blueprint("misc", __name__)
 
-    @bp.route("/images/<string:id>", methods=["GET"])
-    def get_image(id: str):
-        return (
-            "https://i.kym-cdn.com/entries/icons/facebook/000/042/690/Screen_Shot_2022-11-16_at_2.24.03_PM.jpg",
-            200,
+    @bp.route("/images/<string:image_id>", methods=["GET"])
+    def get_image(image_id: str):
+        response = send_from_directory(
+            current_app.config["APPLICATION_STATIC_DIR"], "gendalf.jpg"
         )
+        return response
 
     return bp

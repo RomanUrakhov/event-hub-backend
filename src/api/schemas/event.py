@@ -33,7 +33,10 @@ class GetEventByIdResponse(BaseModel):
             id=dto.id,
             name=dto.name,
             image=(
-                Image(id=dto.image_id, url=url_for("misc.get_image"))
+                Image(
+                    id=dto.image_id,
+                    url=url_for("misc.get_image", id=dto.image_id, _external=True),
+                )
                 if dto.image_id
                 else None
             ),

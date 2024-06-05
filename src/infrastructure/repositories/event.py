@@ -8,3 +8,9 @@ class InMemoryEventRepository(IEventRepository):
 
     def get_by_id(self, id: str) -> Event | None:
         return next((e for e in self._events if e.id == id), None)
+
+    def get_by_slug(self, slug: str) -> Event | None:
+        return next((e for e in self._events if e.slug == slug), None)
+
+    def create(self, event: Event) -> None:
+        return self._events.append(event)

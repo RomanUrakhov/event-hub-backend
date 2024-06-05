@@ -1,8 +1,10 @@
-from typing import Any
 from src.application.interfaces.repositories.event import IEventRepository
 from src.application.use_cases.dto.event import CreateEventCommand, EventDTO
 from src.domain.models.event import Event
-from src.application.use_cases.exceptions.event import EventNotFoundException
+from src.application.use_cases.exceptions.event import (
+    EventAlreadyExistsException,
+    EventNotFoundException,
+)
 
 
 class GetEventById:
@@ -24,7 +26,7 @@ class GetEventById:
     def __call__(self, id: str) -> EventDTO:
         event = self._event_repo.get_by_id(id)
         if not event:
-            raise EventNotFoundException
+            raise EventNotFoundException(event_id=id)
         return self._map_domain_to_dto(event)
 
 
@@ -36,4 +38,11 @@ class CreateEvent:
         self._event_repo = event_repo
 
     def __call__(self, data: CreateEventCommand) -> EventId:
-        pass
+        event = data.to_domain()
+
+        existing_event = self._event_repo.get_by_slug(event.slug)
+        if existing_event:
+            raise EventAlreadyExistsException(event_name=event.name)
+
+        self._event_repo.create(event)
+        return event.id

@@ -4,7 +4,7 @@ from datetime import date
 from pydantic import AnyUrl, BaseModel, Field, model_validator
 from ulid import ULID
 
-from common.helpers import ulid_from_datetime_utc
+from src.common.helpers import ulid_from_datetime_utc
 from src.domain.models.event import Event, EventAdditionalLink
 
 

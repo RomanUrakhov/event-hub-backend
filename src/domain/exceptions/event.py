@@ -8,3 +8,7 @@ class EventAlreadyExistsException(Exception):
     def __init__(self, event_name: str) -> None:
         self.event_name = event_name
         super().__init__(f"Event with such name already exists: {event_name}")
+
+
+class DuplicatedHightlightException(Exception):
+    pass

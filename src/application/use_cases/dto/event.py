@@ -2,8 +2,8 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from pydantic import AnyUrl, BaseModel, Field, model_validator
-from ulid import ULID
 
+from domain.models.highlight import Highlight
 from src.common.helpers import ulid_from_datetime_utc
 from src.domain.models.event import Event, EventAdditionalLink
 
@@ -31,6 +31,7 @@ class CreateEventCommand(BaseModel):
     image_id: str | None = Field(default=None)
     description: str | None = Field(default=None)
     additional_links: list[EventAdditionalLinkModel] = Field(default_factory=list)
+    streamers_ids: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def start_date_before_end_date(self):
@@ -52,3 +53,17 @@ class CreateEventCommand(BaseModel):
                 for li in self.additional_links
             ],
         )
+
+
+class EntrollStreamerOnEventCommand(BaseModel):
+    event_id: str
+    streamers_ids: list[str]
+
+
+class HightlightModel(BaseModel):
+    url: AnyUrl
+
+
+class AttachHighlightsCommand(BaseModel):
+    event_id: str
+    highlights: list[Highlight]

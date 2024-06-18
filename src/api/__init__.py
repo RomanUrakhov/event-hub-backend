@@ -1,6 +1,7 @@
 from datetime import date
 from flask import Flask
 
+from infrastructure.dao.event import InMemoryEventDAO
 from src.config import Config
 from src.infrastructure.repositories.event import InMemoryEventRepository
 from src.domain.models.event import Event
@@ -34,7 +35,8 @@ def _register_blueprints(app: Flask):
                     additional_links=[],
                 )
             ]
-        )
+        ),
+        event_dao=InMemoryEventDAO(),
     )
     app.register_blueprint(event_bp, url_prefix=app.config["APPLICATION_ROOT"])
 

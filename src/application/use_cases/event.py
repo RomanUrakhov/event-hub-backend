@@ -1,3 +1,8 @@
+from application.interfaces.dao.event import (
+    EventDetailsDTO,
+    EventListItemDTO,
+    IEventDAO,
+)
 from application.interfaces.repositories.participation import IParticipationRepository
 from application.interfaces.repositories.streamer import IStreamerRepository
 from common.helpers import ulid_from_datetime_utc
@@ -13,32 +18,27 @@ from src.application.use_cases.dto.event import (
     AttachHighlightsCommand,
     CreateEventCommand,
     EntrollStreamerOnEventCommand,
-    EventDTO,
 )
-from src.domain.models.event import Event
 
 
 class GetEventById:
-    def __init__(self, event_repo: IEventRepository):
-        self._event_repo = event_repo
+    def __init__(self, event_dao: IEventDAO):
+        self._event_dao = event_dao
 
-    @staticmethod
-    def _map_domain_to_dto(event: Event) -> EventDTO:
-        return EventDTO(
-            id=event.id,
-            name=event.name,
-            image_id=event.image_id,
-            description=event.description,
-            start_date=event.start_date,
-            end_date=event.end_date,
-            additional_links=event.additional_links,
-        )
+    def __call__(self, event_id: str) -> EventDetailsDTO:
+        event_dto = self._event_dao.get_event(event_id)
+        if not event_dto:
+            raise EventNotFoundException(event_id=event_id)
+        return event_dto
 
-    def __call__(self, id: str) -> EventDTO:
-        event = self._event_repo.get_by_id(id)
-        if not event:
-            raise EventNotFoundException(event_id=id)
-        return self._map_domain_to_dto(event)
+
+class ListAllEvents:
+    def __init__(self, event_dao: IEventDAO):
+        self._event_dao = event_dao
+
+    def __call__(self) -> list[EventListItemDTO]:
+        event_dtos = self._event_dao.list_events()
+        return event_dtos
 
 
 EventId = str

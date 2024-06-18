@@ -1,21 +1,27 @@
 from datetime import date
+from typing import Optional
 from flask import url_for
-from pydantic import (
-    BaseModel,
-    AnyUrl,
-)
+from pydantic import BaseModel
 
-from src.application.use_cases.dto.event import EventDTO
+from application.interfaces.dao.event import EventDetailsDTO, EventListItemDTO
+from domain.models.event import EventAdditionalLink
+
+
+# TODO: refactor this mess of models (maybe don't give a damn and use domain models as reference)
 
 
 class Image(BaseModel):
     id: str
     url: str
 
-
-class EventAdditionalLink(BaseModel):
-    name: str
-    url: AnyUrl
+    @classmethod
+    def from_image_id(cls, image_id: str | None) -> Optional["Image"]:
+        if image_id:
+            return cls(
+                id=image_id,
+                url=url_for("misc.get_image", image_id=image_id, _external=True),
+            )
+        return None
 
 
 class GetEventByIdResponse(BaseModel):
@@ -28,23 +34,43 @@ class GetEventByIdResponse(BaseModel):
     additional_links: list[EventAdditionalLink]
 
     @classmethod
-    def from_dto(cls, dto: EventDTO) -> "GetEventByIdResponse":
+    def from_dto(cls, dto: EventDetailsDTO) -> "GetEventByIdResponse":
         return cls(
             id=dto.id,
             name=dto.name,
-            image=(
-                Image(
-                    id=dto.image_id,
-                    url=url_for("misc.get_image", id=dto.image_id, _external=True),
-                )
-                if dto.image_id
-                else None
-            ),
+            image=Image.from_image_id(dto.image_id),
             description=dto.description,
             start_date=dto.start_date,
             end_date=dto.end_date,
-            additional_links=[
-                EventAdditionalLink(name=li.name, url=li.url)
-                for li in dto.additional_links
-            ],
+            additional_links=dto.additional_links,
         )
+
+
+class EventListItem(BaseModel):
+    id: str
+    name: str
+    image: Image | None
+    start_date: date
+    end_date: date
+
+    @classmethod
+    def from_dto(cls, dto: EventListItemDTO) -> "EventListItem":
+        return cls(
+            id=dto.id,
+            name=dto.name,
+            image=Image.from_image_id(dto.image_id),
+            start_date=dto.start_date,
+            end_date=dto.end_date,
+        )
+
+
+class ListAllEventsResponse(BaseModel):
+    page_size: int
+    total: int
+    events: list[EventListItem]
+
+    @classmethod
+    def from_dto(cls, dto: list[EventListItemDTO]) -> "ListAllEventsResponse":
+        event_items = [EventListItem.from_dto(li) for li in dto]
+        items_len = len(event_items)
+        return cls(page_size=items_len, total=items_len, events=event_items)

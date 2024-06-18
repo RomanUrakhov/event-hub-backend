@@ -1,4 +1,3 @@
-from dataclasses import dataclass, field
 from datetime import date
 
 from pydantic import AnyUrl, BaseModel, Field, model_validator
@@ -8,22 +7,12 @@ from src.common.helpers import ulid_from_datetime_utc
 from src.domain.models.event import Event, EventAdditionalLink
 
 
-@dataclass
-class EventDTO:
-    id: str
-    name: str
-    image_id: str | None
-    description: str | None
-    start_date: date
-    end_date: date
-    additional_links: list[EventAdditionalLink] = field(default_factory=list)
-
-
 class EventAdditionalLinkModel(BaseModel):
     name: str
     link: AnyUrl
 
 
+# TODO: perhaps it's better to define such models in api/schemas
 class CreateEventCommand(BaseModel):
     name: str
     start_date: date

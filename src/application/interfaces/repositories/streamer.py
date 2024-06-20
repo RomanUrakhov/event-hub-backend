@@ -9,5 +9,9 @@ class IStreamerRepository(ABC):
         pass
 
     @abstractmethod
-    def list_by_ids(streamer_ids: list[str]) -> list[Streamer]:
+    def get_by_twitch_id(self, twitch_id: str) -> Streamer:
+        pass
+
+    @abstractmethod
+    def list_by_ids(self, streamer_ids: list[str]) -> list[Streamer]:
         pass

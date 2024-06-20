@@ -5,4 +5,4 @@ from dataclasses import dataclass
 class Streamer:
     id: str
     name: str
-    twitch_link: str
+    twitch_id: str

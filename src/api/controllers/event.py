@@ -4,11 +4,16 @@ from pydantic import ValidationError
 from application.interfaces.dao.event import IEventDAO
 from application.interfaces.repositories.participation import IParticipationRepository
 from application.interfaces.repositories.streamer import IStreamerRepository
-from application.use_cases.dto.event import CreateEventCommand
+from application.use_cases.dto.event import AttachHighlightsCommand, CreateEventCommand
 from domain.exceptions.event import EventAlreadyExistsException, EventNotFoundException
 from src.api.schemas.event import GetEventByIdResponse, ListAllEventsResponse
 from src.application.interfaces.repositories.event import IEventRepository
-from src.application.use_cases.event import GetEventById, CreateEvent, ListAllEvents
+from src.application.use_cases.event import (
+    AttachHightlihtsToEvent,
+    GetEventById,
+    CreateEvent,
+    ListAllEvents,
+)
 
 
 def create_event_blueprint(
@@ -45,6 +50,15 @@ def create_event_blueprint(
                 "id": event_id,
             }
         ), 201
+
+    @bp.route("/events/<string:event_id>/hightlights", methods=["POST"])
+    def attach_highlights(event_id: str):
+        payload = request.get_json()
+        payload = {"event_id": event_id, **payload}
+        command = AttachHighlightsCommand.model_validate(payload)
+        use_case = AttachHightlihtsToEvent(event_repo)
+        attached_urls = use_case(command)
+        return jsonify({"event_id": event_id, "highlights": attached_urls}), 201
 
     @bp.errorhandler(EventNotFoundException)
     def handle_event_not_found_exception(e: EventNotFoundException):

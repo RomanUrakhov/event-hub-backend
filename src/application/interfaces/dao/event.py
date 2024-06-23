@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from domain.models.event import EventAdditionalLink
+from domain.models.highlight import Highlight
 
 
 @dataclass
@@ -14,6 +15,7 @@ class EventDetailsDTO:
     start_date: date
     end_date: date
     additional_links: list[EventAdditionalLink] = field(default_factory=list)
+    highlights: list[Highlight] = field(default_factory=list)
 
 
 @dataclass

@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from application.interfaces.dao.event import EventDetailsDTO, EventListItemDTO
 from domain.models.event import EventAdditionalLink
+from domain.models.highlight import Highlight
 
 
 # TODO: refactor this mess of models (maybe don't give a damn and use domain models as reference)
@@ -33,6 +34,7 @@ class GetEventByIdResponse(BaseModel):
     start_date: date
     end_date: date
     additional_links: list[EventAdditionalLink]
+    highligths: list[Highlight]
 
     @classmethod
     def from_dto(cls, dto: EventDetailsDTO) -> "GetEventByIdResponse":
@@ -44,6 +46,7 @@ class GetEventByIdResponse(BaseModel):
             start_date=dto.start_date,
             end_date=dto.end_date,
             additional_links=dto.additional_links,
+            highligths=dto.highlights,
         )
 
 

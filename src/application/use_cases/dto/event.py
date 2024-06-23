@@ -2,7 +2,6 @@ from datetime import date
 
 from pydantic import AnyUrl, BaseModel, Field, model_validator
 
-from domain.models.highlight import Highlight
 from src.common.helpers import ulid_from_datetime_utc
 from src.domain.models.event import Event, EventAdditionalLink
 
@@ -55,4 +54,5 @@ class HightlightModel(BaseModel):
 
 class AttachHighlightsCommand(BaseModel):
     event_id: str
-    highlights: list[Highlight]
+    author_id: str
+    highlights: list[HightlightModel]

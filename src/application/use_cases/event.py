@@ -90,7 +90,7 @@ class EntrollStreamersOnEvent:
     def __call__(self, data: EntrollStreamerOnEventCommand):
         event = self._event_repo.get_by_id(data.event_id)
         if not event:
-            raise EventNotFoundException
+            raise EventNotFoundException(event_id=data.event_id)
 
         streamers = self._streamer_repo.list_by_ids(data.streamers_ids)
 
@@ -107,18 +107,30 @@ class AttachHightlihtsToEvent:
     def __init__(self, event_repository: IEventRepository):
         self._event_repo = event_repository
 
-    def __call__(self, data: AttachHighlightsCommand):
+    def __call__(self, data: AttachHighlightsCommand) -> list[str]:
         event = self._event_repo.get_by_id(data.event_id)
 
         if not event:
-            raise EventNotFoundException
+            raise EventNotFoundException(event_id=data.event_id)
 
-        for highlight in data.highlights:
+        highlights = [
+            Highlight(
+                url=str(h.url),
+                author_id=data.author_id,
+            )
+            for h in data.highlights
+        ]
+
+        attached_highlights = []
+        for highlight in highlights:
             try:
                 event.attach_highlight(
                     Highlight(url=highlight.url, author_id=highlight.author_id)
                 )
+                attached_highlights.append(highlight.url)
             except DuplicatedHightlightException:
                 pass
 
         self._event_repo.update(event)
+
+        return attached_highlights

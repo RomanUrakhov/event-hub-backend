@@ -1,8 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from pydantic import Field
-
 from common.helpers import current_datetime_utc
 
 
@@ -10,7 +8,7 @@ from common.helpers import current_datetime_utc
 class Highlight:
     url: str = field()
     author_id: str
-    attached_datetime: datetime = Field(default_factory=current_datetime_utc)
+    attached_datetime: datetime = field(default_factory=current_datetime_utc)
 
     def __eq__(self, other: "Highlight") -> bool:
         if isinstance(other, Highlight):

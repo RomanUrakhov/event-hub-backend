@@ -5,6 +5,7 @@ from application.interfaces.dao.event import (
     IEventDAO,
 )
 from domain.models.event import EventAdditionalLink
+from domain.models.highlight import Highlight
 
 
 class InMemoryEventDAO(IEventDAO):
@@ -18,6 +19,9 @@ class InMemoryEventDAO(IEventDAO):
             end_date=date.fromisoformat("2024-05-10"),
             additional_links=[
                 EventAdditionalLink(url="https://www.twitch.tv/", name="123")
+            ],
+            highlights=[
+                Highlight(url="https://www.twitch.tv/dota2_paragon_ru", author_id="123")
             ],
         )
         self._list_events = [

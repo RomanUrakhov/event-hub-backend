@@ -9,7 +9,7 @@ from src.domain.models.event import Event, EventAdditionalLink
 
 class EventAdditionalLinkModel(BaseModel):
     name: str
-    link: AnyUrl
+    url: AnyUrl
 
 
 # TODO: perhaps it's better to define such models in api/schemas
@@ -38,7 +38,7 @@ class CreateEventCommand(BaseModel):
             image_id=self.image_id,
             description=self.description,
             additional_links=[
-                EventAdditionalLink(url=li.url, name=li.name)
+                EventAdditionalLink(url=str(li.url), name=li.name)
                 for li in self.additional_links
             ],
         )

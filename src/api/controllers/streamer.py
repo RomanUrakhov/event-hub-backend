@@ -1,5 +1,6 @@
-from flask import Blueprint, jsonify, request, url_for
-from api.schemas.streamer import CreateStreamerCommand
+from flask import Blueprint, jsonify, request
+from api.schemas.streamer import CreateStreamerResponse
+from application.use_cases.dto.streamer import CreateStreamerCommand
 from application.interfaces.repositories.streamer import IStreamerRepository
 from application.use_cases.streamer import CreateStreamer
 
@@ -12,9 +13,5 @@ def create_streamer_blueprint(streamer_repository: IStreamerRepository):
         command = CreateStreamerCommand.model_validate(request.json)
         use_case = CreateStreamer(streamer_repository)
         streamer_id = use_case(command)
-        return jsonify(
-            {
-                "url": url_for("streamer.get_streamer", id=streamer_id, _external=True),
-                "id": streamer_id,
-            }
-        ), 201
+        response = CreateStreamerResponse(id=streamer_id)
+        return jsonify(response.model_dump()), 201

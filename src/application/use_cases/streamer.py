@@ -1,4 +1,4 @@
-from api.schemas.streamer import CreateStreamerCommand
+from application.use_cases.dto.streamer import CreateStreamerCommand
 from application.interfaces.repositories.streamer import IStreamerRepository
 from common.helpers import ulid_from_datetime_utc
 from domain.exceptions.streamer import StreamerAlreadyExistsException

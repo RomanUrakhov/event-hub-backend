@@ -1,7 +1,12 @@
+from typing import Any
+from application.interfaces.dao.streamer import IStreamerDAO, StreamerDetailsDTO
 from application.use_cases.dto.streamer import CreateStreamerCommand
 from application.interfaces.repositories.streamer import IStreamerRepository
 from common.helpers import ulid_from_datetime_utc
-from domain.exceptions.streamer import StreamerAlreadyExistsException
+from domain.exceptions.streamer import (
+    StreamerAlreadyExistsException,
+    StreamerNotExistsException,
+)
 from domain.models.streamer import Streamer
 
 
@@ -22,3 +27,16 @@ class CreateStreamer:
         self._streamer_repo.create(streamer)
 
         return streamer.id
+
+
+class GetStreamerDetails:
+    def __init__(self, streamer_dao: IStreamerDAO):
+        self._streamer_dao = streamer_dao
+
+    def __call__(self, streamer_id: str) -> StreamerDetailsDTO:
+        streamer = self._streamer_dao.get_streamer_details(streamer_id)
+
+        if not streamer:
+            raise StreamerNotExistsException(streamer_id=streamer_id)
+
+        return streamer

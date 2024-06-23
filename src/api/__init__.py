@@ -1,7 +1,9 @@
 from datetime import date
 from flask import Flask
 
+from application.interfaces.dao.streamer import StreamerDetailsDTO, StreamerEventItem
 from infrastructure.dao.event import InMemoryEventDAO
+from infrastructure.dao.streamer import InMemoryStreamerDAO
 from infrastructure.repositories.streamer import InMemoryStreamerRepository
 from src.config import Config
 from src.infrastructure.repositories.event import InMemoryEventRepository
@@ -46,7 +48,32 @@ def _register_blueprints(app: Flask):
     app.register_blueprint(misc_bp, url_prefix=app.config["APPLICATION_ROOT"])
 
     streamer_bp = create_streamer_blueprint(
-        streamer_repository=InMemoryStreamerRepository([])
+        streamer_repository=InMemoryStreamerRepository([]),
+        streamer_dao=InMemoryStreamerDAO(
+            data=[
+                StreamerDetailsDTO(
+                    id="123",
+                    twitch_id="123",
+                    name="test",
+                    events=[
+                        StreamerEventItem(
+                            id="123",
+                            name="event-1",
+                            start_date=date.fromisoformat("2024-05-05"),
+                            end_date=date.fromisoformat("2024-05-10"),
+                            image_id="123",
+                        ),
+                        StreamerEventItem(
+                            id="456",
+                            name="event-2",
+                            start_date=date.fromisoformat("2024-06-05"),
+                            end_date=date.fromisoformat("2024-06-10"),
+                            image_id="456",
+                        ),
+                    ],
+                )
+            ]
+        ),
     )
     app.register_blueprint(streamer_bp, url_prefix=app.config["APPLICATION_ROOT"])
 

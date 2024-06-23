@@ -1,11 +1,19 @@
 from flask import Blueprint, jsonify, request
-from api.schemas.streamer import CreateStreamerResponse
+from pydantic import ValidationError
+from api.schemas.streamer import CreateStreamerResponse, GetStreamerDetailsResponse
+from application.interfaces.dao.streamer import IStreamerDAO
 from application.use_cases.dto.streamer import CreateStreamerCommand
 from application.interfaces.repositories.streamer import IStreamerRepository
-from application.use_cases.streamer import CreateStreamer
+from application.use_cases.streamer import CreateStreamer, GetStreamerDetails
+from domain.exceptions.streamer import (
+    StreamerAlreadyExistsException,
+    StreamerNotExistsException,
+)
 
 
-def create_streamer_blueprint(streamer_repository: IStreamerRepository):
+def create_streamer_blueprint(
+    streamer_repository: IStreamerRepository, streamer_dao: IStreamerDAO
+):
     bp = Blueprint("streamer", __name__)
 
     @bp.route("/streamers", methods=["POST"])
@@ -18,10 +26,29 @@ def create_streamer_blueprint(streamer_repository: IStreamerRepository):
 
     @bp.route("/streamers/<string:streamer_id>", methods=["GET"])
     def get_streamer(streamer_id: str):
+        use_case = GetStreamerDetails(streamer_dao)
+        streamer = use_case(streamer_id=streamer_id)
+        response = GetStreamerDetailsResponse.from_dto(streamer)
+        return jsonify(response.model_dump()), 200
+
+    @bp.errorhandler(StreamerNotExistsException)
+    def handle_streamer_not_found_exception(e: StreamerNotExistsException):
+        return jsonify(
+            {"error": "Streamer not found", "streamer_id": e.streamer_id}
+        ), 404
+
+    @bp.errorhandler(StreamerAlreadyExistsException)
+    def handle_streamer_already_exists_exception(e: StreamerAlreadyExistsException):
         return jsonify(
             {
-                "id": "123",
+                "error": "Streamer with such twitch ID already exists",
+                "streamer_id": e.streamer_id,
+                "twitch_id": e.twitch_id,
             }
-        ), 200
+        ), 409
+
+    @bp.errorhandler(ValidationError)
+    def handle_validation_error(e: ValidationError):
+        return jsonify(e.errors()), 400
 
     return bp

@@ -8,6 +8,7 @@ from domain.models.event import EventAdditionalLink
 
 
 # TODO: refactor this mess of models (maybe don't give a damn and use domain models as reference)
+# TODO: add fields ordering for better client's side expirience
 
 
 class Image(BaseModel):

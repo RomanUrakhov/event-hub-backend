@@ -2,8 +2,10 @@ from datetime import date
 from flask import Flask
 
 from application.interfaces.dao.streamer import StreamerDetailsDTO, StreamerEventItem
+from domain.models.streamer import Streamer
 from infrastructure.dao.event import InMemoryEventDAO
 from infrastructure.dao.streamer import InMemoryStreamerDAO
+from infrastructure.repositories.participation import InMemoryParticipationRepository
 from infrastructure.repositories.streamer import InMemoryStreamerRepository
 from src.config import Config
 from src.infrastructure.repositories.event import InMemoryEventRepository
@@ -40,6 +42,10 @@ def _register_blueprints(app: Flask):
                 )
             ]
         ),
+        streamer_repo=InMemoryStreamerRepository(
+            streamers=[Streamer(id="123", name="test", twitch_id="123")]
+        ),
+        participation_repo=InMemoryParticipationRepository(participations=[]),
         event_dao=InMemoryEventDAO(),
     )
     app.register_blueprint(event_bp, url_prefix=app.config["APPLICATION_ROOT"])

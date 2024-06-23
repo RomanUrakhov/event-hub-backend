@@ -2,6 +2,8 @@ from flask import Blueprint, jsonify, request, url_for
 from pydantic import ValidationError
 
 from application.interfaces.dao.event import IEventDAO
+from application.interfaces.repositories.participation import IParticipationRepository
+from application.interfaces.repositories.streamer import IStreamerRepository
 from application.use_cases.dto.event import CreateEventCommand
 from domain.exceptions.event import EventAlreadyExistsException, EventNotFoundException
 from src.api.schemas.event import GetEventByIdResponse, ListAllEventsResponse
@@ -9,7 +11,12 @@ from src.application.interfaces.repositories.event import IEventRepository
 from src.application.use_cases.event import GetEventById, CreateEvent, ListAllEvents
 
 
-def create_event_blueprint(event_repo: IEventRepository, event_dao: IEventDAO):
+def create_event_blueprint(
+    event_repo: IEventRepository,
+    event_dao: IEventDAO,
+    streamer_repo: IStreamerRepository,
+    participation_repo: IParticipationRepository,
+):
     bp = Blueprint("event", __name__)
 
     @bp.route("/events/<string:id>", methods=["GET"])
@@ -30,7 +37,7 @@ def create_event_blueprint(event_repo: IEventRepository, event_dao: IEventDAO):
     @bp.route("/events", methods=["POST"])
     def create_event():
         command = CreateEventCommand.model_validate(request.json)
-        use_case = CreateEvent(event_repo)
+        use_case = CreateEvent(event_repo, streamer_repo, participation_repo)
         event_id = use_case(command)
         return jsonify(
             {

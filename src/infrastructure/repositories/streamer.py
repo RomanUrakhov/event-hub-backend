@@ -17,3 +17,6 @@ class InMemoryStreamerRepository(IStreamerRepository):
 
     def list_by_ids(self, streamer_ids: list[str]) -> list[Streamer]:
         return [s for s in self._streamers if s.id in streamer_ids]
+
+    def create(self, streamer: Streamer):
+        return self._streamers.append(streamer)

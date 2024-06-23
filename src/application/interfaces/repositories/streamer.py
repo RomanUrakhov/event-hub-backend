@@ -15,3 +15,7 @@ class IStreamerRepository(ABC):
     @abstractmethod
     def list_by_ids(self, streamer_ids: list[str]) -> list[Streamer]:
         pass
+
+    @abstractmethod
+    def create(self, streamer: Streamer):
+        pass

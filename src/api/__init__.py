@@ -2,6 +2,7 @@ from datetime import date
 from flask import Flask
 
 from infrastructure.dao.event import InMemoryEventDAO
+from infrastructure.repositories.streamer import InMemoryStreamerRepository
 from src.config import Config
 from src.infrastructure.repositories.event import InMemoryEventRepository
 from src.domain.models.event import Event
@@ -21,6 +22,7 @@ def create_app() -> Flask:
 def _register_blueprints(app: Flask):
     from .controllers.event import create_event_blueprint
     from .controllers.misc import create_misc_blueprint
+    from .controllers.streamer import create_streamer_blueprint
 
     # TODO: find the way to setup global API prefix at once and not duplicate for every blueprint
     event_bp = create_event_blueprint(
@@ -42,5 +44,10 @@ def _register_blueprints(app: Flask):
 
     misc_bp = create_misc_blueprint()
     app.register_blueprint(misc_bp, url_prefix=app.config["APPLICATION_ROOT"])
+
+    streamer_bp = create_streamer_blueprint(
+        streamer_repository=InMemoryStreamerRepository([])
+    )
+    app.register_blueprint(streamer_bp, url_prefix=app.config["APPLICATION_ROOT"])
 
     return app

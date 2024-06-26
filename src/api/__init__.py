@@ -1,7 +1,10 @@
 from datetime import date
 from flask import Flask
 
-from application.interfaces.dao.streamer import StreamerDetailsDTO, StreamerEventItem
+from src.application.interfaces.dao.streamer import (
+    StreamerDetailsDTO,
+    StreamerEventItem,
+)
 from domain.models.streamer import Streamer
 from infrastructure.dao.event import InMemoryEventDAO
 from infrastructure.dao.streamer import InMemoryStreamerDAO

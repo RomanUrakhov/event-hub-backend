@@ -6,6 +6,7 @@ load_dotenv()
 
 
 class Config:
+    APPLICATION_HOST = os.getenv("APPLICATION_HOST")
     APPLICATION_ROOT = "/api"
     # TODO: deal with processing static files
     APPLICATION_STATIC_DIR = "/home/marcie/projects/event-hub-backend/static"

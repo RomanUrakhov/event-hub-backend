@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/event-hub-backend
+    environment:
+      - FLASK_ENV=development
+      - APPLICATION_HOST=0.0.0.0

@@ -29,10 +29,10 @@ def create_misc_blueprint():
 
         file = request.files["file"]
 
-        if file.filename == "":
+        if not file or not file.filename:
             return jsonify({"error": "No selected file"}), 400
 
-        if file and allowed_file(file.filename):
+        if allowed_file(file.filename):
             file_id = str(uuid4())
             filename = secure_filename(file.filename)
             filename = f"{file_id}{filename}"
@@ -47,5 +47,7 @@ def create_misc_blueprint():
                     "url": url_for("misc.get_image", image_id=filename, _external=True),
                 }
             ), 201
+        else:
+            return jsonify({"error": "Not allowed file format"}), 400
 
     return bp

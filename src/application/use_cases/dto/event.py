@@ -11,7 +11,6 @@ class EventAdditionalLinkModel(BaseModel):
     url: AnyUrl
 
 
-# TODO: perhaps it's better to define such models in api/schemas
 class CreateEventCommand(BaseModel):
     name: str
     start_date: date

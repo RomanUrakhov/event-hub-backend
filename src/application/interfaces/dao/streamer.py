@@ -13,7 +13,7 @@ class StreamerEventItem:
     name: str
     start_date: date
     end_date: date
-    image_id: str
+    image_id: str | None
 
 
 @dataclass

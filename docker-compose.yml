@@ -1,12 +1,31 @@
 version: '3'
 
+networks:
+  event_hub_network:
+    driver: bridge
+
 services:
   web:
     build: .
     ports:
       - "5000:5000"
+    networks:
+      - event_hub_network
     volumes:
       - .:/event-hub-backend
     environment:
       - FLASK_ENV=development
       - APPLICATION_HOST=0.0.0.0
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123
+      MYSQL_DATABASE: event_hub
+    ports:
+      - "3306:3306"
+    networks:
+      - event_hub_network
+    volumes:
+      - ./scripts/database:/docker-entrypoint-initdb.d

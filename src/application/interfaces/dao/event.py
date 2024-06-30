@@ -29,7 +29,7 @@ class EventListItemDTO:
 
 class IEventDAO(ABC):
     @abstractmethod
-    def get_event(self, id: str) -> EventDetailsDTO:
+    def get_event(self, id: str) -> EventDetailsDTO | None:
         pass
 
     @abstractmethod

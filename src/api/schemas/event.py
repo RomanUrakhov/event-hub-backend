@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Optional
 from flask import url_for
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from application.interfaces.dao.event import EventDetailsDTO, EventListItemDTO
 from domain.models.event import EventAdditionalLink
@@ -27,6 +27,8 @@ class Image(BaseModel):
 
 
 class GetEventByIdResponse(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     id: str
     name: str
     image: Image | None

@@ -1,8 +1,12 @@
-from dataclasses import dataclass
+from domain import Base
+
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
 
 
-@dataclass
-class Streamer:
-    id: str
-    name: str
-    twitch_id: str
+class Streamer(Base):
+    __tablename__ = "streamer"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    twitch_id: Mapped[str] = mapped_column(String, unique=True, nullable=False)

@@ -2,8 +2,8 @@ from datetime import date
 
 from pydantic import AnyUrl, BaseModel, Field, model_validator
 
-from src.common.helpers import ulid_from_datetime_utc
-from src.domain.models.event import Event, EventAdditionalLink
+from common.helpers import ulid_from_datetime_utc
+from domain.models.event import Event, EventAdditionalLink
 
 
 class EventAdditionalLinkModel(BaseModel):
@@ -39,6 +39,7 @@ class CreateEventCommand(BaseModel):
                 EventAdditionalLink(url=str(li.url), name=li.name)
                 for li in self.additional_links
             ],
+            highlights=[],
         )
 
 

@@ -1,7 +1,9 @@
 from flask import Blueprint, jsonify, request
 from pydantic import ValidationError
+from api.controllers.auth import token_required
 from api.schemas.streamer import CreateStreamerResponse, GetStreamerDetailsResponse
 from application.interfaces.dao.streamer import IStreamerDAO
+from application.interfaces.services.auth import IAuthProvider
 from application.use_cases.dto.streamer import CreateStreamerCommand
 from application.interfaces.repositories.streamer import IStreamerRepository
 from application.use_cases.streamer import CreateStreamer, GetStreamerDetails
@@ -12,11 +14,14 @@ from domain.exceptions.streamer import (
 
 
 def create_streamer_blueprint(
-    streamer_repository: IStreamerRepository, streamer_dao: IStreamerDAO
+    streamer_repository: IStreamerRepository,
+    streamer_dao: IStreamerDAO,
+    auth_provider: IAuthProvider,
 ):
     bp = Blueprint("streamer", __name__)
 
     @bp.route("/streamers", methods=["POST"])
+    @token_required(auth_provider)
     def create_streamer():
         command = CreateStreamerCommand.model_validate(request.json)
         use_case = CreateStreamer(streamer_repository)

@@ -3,11 +3,14 @@ from flask import Flask
 from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import sessionmaker
 
+from api.controllers.auth import create_auth_blueprint
 from infrastructure.dao.event import MySQLEventDAO
 from infrastructure.dao.streamer import MySQLStreamerDAO
 from infrastructure.repositories.participation import (
     MySQLParticipationRepository,
 )
+from infrastructure.repositories.user_account import MySQLUserAccountRepository
+from infrastructure.services.auth import TwitchAuthProvider
 from infrastructure.repositories.streamer import (
     MySQLStreamerRepository,
 )
@@ -51,11 +54,23 @@ def _register_blueprints(app: Flask, session_factory):
     event_repo = MySQLEventRepository(session)
     streamer_repo = MySQLStreamerRepository(session)
     participation_repo = MySQLParticipationRepository(session)
+    account_repository = MySQLUserAccountRepository(session)
 
     event_dao = MySQLEventDAO(session)
     streamer_dao = MySQLStreamerDAO(session)
 
+    auth_provider = TwitchAuthProvider(
+        app.config["TWITCH_CLIENT_ID"],
+        app.config["TWITCH_CLIENT_SECRET"],
+        app.config["TWITCH_REDIRECT_URI"],
+    )
+
     # TODO: find the way to setup global API prefix at once and not duplicate for every blueprint
+    auth_bp = create_auth_blueprint(
+        auth_provider=auth_provider, account_repository=account_repository
+    )
+    app.register_blueprint(auth_bp, url_prefix=app.config["APPLICATION_ROOT"])
+
     event_bp = create_event_blueprint(
         event_repo=event_repo,
         streamer_repo=streamer_repo,
@@ -70,6 +85,7 @@ def _register_blueprints(app: Flask, session_factory):
     streamer_bp = create_streamer_blueprint(
         streamer_repository=streamer_repo,
         streamer_dao=streamer_dao,
+        auth_provider=auth_provider,
     )
     app.register_blueprint(streamer_bp, url_prefix=app.config["APPLICATION_ROOT"])
 

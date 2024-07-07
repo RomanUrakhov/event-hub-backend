@@ -9,8 +9,7 @@ CREATE TABLE IF NOT EXISTS event (
 
 CREATE TABLE IF NOT EXISTS user_account (
     id VARCHAR(255) PRIMARY KEY,
-    twitch_id VARCHAR(255) NOT NULL UNIQUE,
-    access_token TEXT NOT NULL
+    twitch_id VARCHAR(255) NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS streamer (

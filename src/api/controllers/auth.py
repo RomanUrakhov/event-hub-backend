@@ -15,6 +15,7 @@ def token_required(auth_provider: IAuthProvider):
             if not id_token:
                 return jsonify({"error": "Unauthorized"}), 401
 
+            # TODO: distinguish between different types of error (e.g. "Id Token Expired", etc.)
             try:
                 user_payload = auth_provider.validate_token(id_token)
             except AuthException:

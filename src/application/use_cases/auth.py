@@ -7,7 +7,7 @@ from src.infrastructure.services.auth import AuthPayload, IAuthProvider
 
 
 class LoginAccountResponse(NamedTuple):
-    access_token: str
+    id_token: str
     refresh_token: str
     user_avatar: str
     user_name: str
@@ -22,7 +22,7 @@ def _create_login_response(
     auth_data: AuthPayload, user_account: UserAccount
 ) -> LoginAccountResponse:
     return LoginAccountResponse(
-        access_token=auth_data.access_token,
+        id_token=auth_data.access_token,
         refresh_token=auth_data.refresh_token,
         user_avatar=auth_data.user_payload.avatar,
         user_name=auth_data.user_payload.name,

@@ -39,8 +39,8 @@ class TwitchAuthProvider(IAuthProvider):
 
             # TODO: apply token validation to check if it's actually issued by Twitch
             decoded_token = jwt.decode(id_token, options={"verify_signature": False})
-            user_avatar = decoded_token.get("picture")
-            user_username = decoded_token.get("preferred_username")
+            user_avatar = decoded_token["picture"]
+            user_username = decoded_token["preferred_username"]
 
             return AuthPayload(
                 access_token=auth_data["id_token"],
@@ -79,3 +79,28 @@ class TwitchAuthProvider(IAuthProvider):
             avatar=auth_payload["picture"],
             name=auth_payload["preferred_username"],
         )
+
+    def refresh_token(self, refresh_token: str) -> AuthPayload:
+        payload = {
+            "client_id": self._client_id,
+            "client_secret": self._client_secret,
+            "refresh_token": refresh_token,
+            "grant_type": "refresh_token",
+        }
+
+        try:
+            response = requests.post(TwitchAuthProvider.TOKEN_ENDPOINT, data=payload)
+            response.raise_for_status()
+            auth_data = response.json()
+
+            id_token = auth_data.get("id_token")
+
+            user_payload = self.validate_token(id_token)
+
+            return AuthPayload(
+                access_token=auth_data["id_token"],
+                refresh_token=auth_data["refresh_token"],
+                user_payload=user_payload,
+            )
+        except Exception:
+            raise TwitchAuthException("Failed to refresh token")

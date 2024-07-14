@@ -48,3 +48,7 @@ class IAuthProvider(ABC):
     @abstractmethod
     def validate_token(self, token: str) -> UserPayload:
         pass
+
+    @abstractmethod
+    def refresh_token(self, refresh_token: str) -> AuthPayload:
+        pass

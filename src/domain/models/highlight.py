@@ -14,7 +14,7 @@ class Highlight(Base):
 
     url: Mapped[str] = mapped_column(String, primary_key=True)
     author_id: Mapped[str] = mapped_column(
-        ForeignKey("user_accounts.id"), nullable=False
+        ForeignKey("user_account.id"), nullable=False
     )
     event_id: Mapped[str] = mapped_column(ForeignKey("event.id"), nullable=False)
     attached_datetime: Mapped[datetime] = mapped_column(

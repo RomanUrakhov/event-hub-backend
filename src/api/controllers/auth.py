@@ -6,7 +6,9 @@ from src.application.interfaces.repositories.account import IUserAccountReposito
 from src.application.use_cases.auth import login_account
 
 
-def token_required(auth_provider: IAuthProvider):
+def token_required(
+    auth_provider: IAuthProvider, account_repository: IUserAccountRepository
+):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -21,7 +23,9 @@ def token_required(auth_provider: IAuthProvider):
             except AuthException:
                 return jsonify({"error": "Unauthorized"}), 401
 
-            g.external_user_id = user_payload.external_id
+            account = account_repository.get_by_external_id(user_payload.external_id)
+
+            g.user_account = account
 
             return func(*args, **kwargs)
 

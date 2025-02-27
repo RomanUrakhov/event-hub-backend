@@ -3,6 +3,7 @@ from pydantic import ValidationError
 from api.controllers.auth import token_required
 from api.schemas.streamer import CreateStreamerResponse, GetStreamerDetailsResponse
 from application.interfaces.dao.streamer import IStreamerDAO
+from application.interfaces.repositories.account import IUserAccountRepository
 from application.interfaces.services.auth import IAuthProvider
 from application.use_cases.dto.streamer import CreateStreamerCommand
 from application.interfaces.repositories.streamer import IStreamerRepository
@@ -17,11 +18,12 @@ def create_streamer_blueprint(
     streamer_repository: IStreamerRepository,
     streamer_dao: IStreamerDAO,
     auth_provider: IAuthProvider,
+    account_repo: IUserAccountRepository,
 ):
     bp = Blueprint("streamer", __name__)
 
     @bp.route("/streamers", methods=["POST"])
-    @token_required(auth_provider)
+    @token_required(auth_provider=auth_provider, account_repository=account_repo)
     def create_streamer():
         command = CreateStreamerCommand.model_validate(request.json)
         use_case = CreateStreamer(streamer_repository)

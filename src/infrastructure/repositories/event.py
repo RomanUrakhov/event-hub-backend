@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 
 class InMemoryEventRepository(IEventRepository):
-    def __init__(self, events: list[Event] = None):
+    def __init__(self, events: list[Event] | None = None):
         self._events = events or []
 
     def check_exists(self, event_id: str) -> bool:

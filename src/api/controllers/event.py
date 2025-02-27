@@ -1,11 +1,19 @@
-from flask import Blueprint, jsonify, request, url_for
+from flask import Blueprint, jsonify, request, url_for, g
 from pydantic import ValidationError
 
+from api.controllers.auth import token_required
 from application.interfaces.dao.event import IEventDAO
+from application.interfaces.repositories.account import (
+    IAccountEventAccessRepository,
+    IUserAccountRepository,
+)
 from application.interfaces.repositories.participation import IParticipationRepository
 from application.interfaces.repositories.streamer import IStreamerRepository
+from application.interfaces.services.auth import IAuthProvider
 from application.use_cases.dto.event import AttachHighlightsCommand, CreateEventCommand
+from domain.exceptions.account import AccountDoesNotHaveAccessException
 from domain.exceptions.event import EventAlreadyExistsException, EventNotFoundException
+from domain.models.account import UserAccount
 from src.api.schemas.event import GetEventByIdResponse, ListAllEventsResponse
 from src.application.interfaces.repositories.event import IEventRepository
 from src.application.use_cases.event import (
@@ -17,10 +25,13 @@ from src.application.use_cases.event import (
 
 
 def create_event_blueprint(
+    auth_provider: IAuthProvider,
     event_repo: IEventRepository,
     event_dao: IEventDAO,
     streamer_repo: IStreamerRepository,
     participation_repo: IParticipationRepository,
+    account_repo: IUserAccountRepository,
+    account_event_access_repo: IAccountEventAccessRepository,
 ):
     bp = Blueprint("event", __name__)
 
@@ -52,11 +63,13 @@ def create_event_blueprint(
         ), 201
 
     @bp.route("/events/<string:event_id>/hightlights", methods=["POST"])
+    @token_required(auth_provider=auth_provider, account_repository=account_repo)
     def attach_highlights(event_id: str):
+        user_account: UserAccount = g.user_account
         payload = request.get_json()
-        payload = {"event_id": event_id, **payload}
+        payload = {"event_id": event_id, "author_id": user_account.id, **payload}
         command = AttachHighlightsCommand.model_validate(payload)
-        use_case = AttachHightlihtsToEvent(event_repo)
+        use_case = AttachHightlihtsToEvent(event_repo, account_event_access_repo)
         attached_urls = use_case(command)
         return jsonify({"event_id": event_id, "highlights": attached_urls}), 201
 
@@ -73,5 +86,13 @@ def create_event_blueprint(
         return jsonify(
             {"error": "Event with such name already exists", "event_name": e.event_name}
         ), 409
+
+    @bp.errorhandler(AccountDoesNotHaveAccessException)
+    def handle_account_does_not_have_access_exception(
+        e: AccountDoesNotHaveAccessException,
+    ):
+        return jsonify(
+            {"error": str(e), "account_id": e.account_id, "event_id": e.event_id}
+        ), 403
 
     return bp

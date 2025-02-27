@@ -1,8 +1,11 @@
-from application.interfaces.repositories.account import IUserAccountRepository
+from application.interfaces.repositories.account import (
+    IAccountEventAccessRepository,
+    IUserAccountRepository,
+)
 
 from sqlalchemy.orm import Session
 
-from domain.models.account import UserAccount
+from domain.models.account import AccountEventAccess, UserAccount
 
 
 class MySQLUserAccountRepository(IUserAccountRepository):
@@ -19,3 +22,20 @@ class MySQLUserAccountRepository(IUserAccountRepository):
     def create_account(self, account: UserAccount) -> None:
         self._session.add(account)
         self._session.commit()
+
+
+class MySQLAccountEventAccessRepository(IAccountEventAccessRepository):
+    def __init__(self, session: Session):
+        self._session = session
+
+    def get_account_access(
+        self, account_id: str, event_id: str
+    ) -> AccountEventAccess | None:
+        return (
+            self._session.query(AccountEventAccess)
+            .filter(
+                AccountEventAccess.account_id == account_id,
+                AccountEventAccess.event_id == event_id,
+            )
+            .one_or_none()
+        )

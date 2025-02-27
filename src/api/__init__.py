@@ -9,7 +9,10 @@ from infrastructure.dao.streamer import MySQLStreamerDAO
 from infrastructure.repositories.participation import (
     MySQLParticipationRepository,
 )
-from infrastructure.repositories.user_account import MySQLUserAccountRepository
+from infrastructure.repositories.user_account import (
+    MySQLAccountEventAccessRepository,
+    MySQLUserAccountRepository,
+)
 from infrastructure.services.auth import TwitchAuthProvider
 from infrastructure.repositories.streamer import (
     MySQLStreamerRepository,
@@ -55,6 +58,7 @@ def _register_blueprints(app: Flask, session_factory):
     streamer_repo = MySQLStreamerRepository(session)
     participation_repo = MySQLParticipationRepository(session)
     account_repository = MySQLUserAccountRepository(session)
+    account_event_access_repository = MySQLAccountEventAccessRepository(session)
 
     event_dao = MySQLEventDAO(session)
     streamer_dao = MySQLStreamerDAO(session)
@@ -72,10 +76,13 @@ def _register_blueprints(app: Flask, session_factory):
     app.register_blueprint(auth_bp, url_prefix=app.config["APPLICATION_ROOT"])
 
     event_bp = create_event_blueprint(
+        auth_provider=auth_provider,
         event_repo=event_repo,
         streamer_repo=streamer_repo,
         participation_repo=participation_repo,
         event_dao=event_dao,
+        account_repo=account_repository,
+        account_event_access_repo=account_event_access_repository,
     )
     app.register_blueprint(event_bp, url_prefix=app.config["APPLICATION_ROOT"])
 
@@ -86,6 +93,7 @@ def _register_blueprints(app: Flask, session_factory):
         streamer_repository=streamer_repo,
         streamer_dao=streamer_dao,
         auth_provider=auth_provider,
+        account_repo=account_repository,
     )
     app.register_blueprint(streamer_bp, url_prefix=app.config["APPLICATION_ROOT"])
 

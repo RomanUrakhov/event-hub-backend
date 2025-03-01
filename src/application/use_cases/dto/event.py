@@ -46,6 +46,7 @@ class CreateEventCommand(BaseModel):
 
 
 class EntrollStreamerOnEventCommand(BaseModel):
+    author_id: str
     event_id: str
     streamers_ids: list[str]
 

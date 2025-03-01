@@ -1,4 +1,3 @@
-from click import command
 from application.interfaces.dao.event import (
     EventDetailsDTO,
     EventListItemDTO,
@@ -107,23 +106,20 @@ class EntrollStreamersOnEvent:
         self._account_event_access_repo = account_event_access_repository
 
     def __call__(self, data: EntrollStreamerOnEventCommand):
-        # TODO: add account_id to command data
-        account_id = ""
-
         event = self._event_repo.get_by_id(data.event_id)
         if not event:
             raise EventNotFoundException(event_id=data.event_id)
 
         account_access = self._account_event_access_repo.get_account_access(
-            account_id=account_id, event_id=event.id
+            account_id=data.author_id, event_id=event.id
         )
         if not account_access:
             raise AccountDoesNotHaveAccessException(
-                account_id=account_id, event_id=event.id
+                account_id=data.author_id, event_id=event.id
             )
         if not account_access.can_enroll_streamers_on_event():
             raise AccountDoesNotHaveAccessException(
-                account_id=account_id, event_id=event.id
+                account_id=data.author_id, event_id=event.id
             )
 
         streamers = self._streamer_repo.list_by_ids(data.streamers_ids)

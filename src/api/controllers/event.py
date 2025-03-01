@@ -11,7 +11,11 @@ from application.interfaces.repositories.account import (
 from application.interfaces.repositories.participation import IParticipationRepository
 from application.interfaces.repositories.streamer import IStreamerRepository
 from application.interfaces.services.auth import IAuthProvider
-from application.use_cases.dto.event import AttachHighlightsCommand, CreateEventCommand
+from application.use_cases.dto.event import (
+    AttachHighlightsCommand,
+    CreateEventCommand,
+    EntrollStreamerOnEventCommand,
+)
 from domain.exceptions.account import (
     AccountDoesNotHaveAccessException,
     AccountDoesNotHaveCreatorAccessException,
@@ -22,6 +26,7 @@ from src.api.schemas.event import GetEventByIdResponse, ListAllEventsResponse
 from src.application.interfaces.repositories.event import IEventRepository
 from src.application.use_cases.event import (
     AttachHightlihtsToEvent,
+    EntrollStreamersOnEvent,
     GetEventById,
     CreateEvent,
     ListAllEvents,
@@ -72,6 +77,23 @@ def create_event_blueprint(
                 "id": event_id,
             }
         ), 201
+
+    @bp.route("/events/<string:event_id>/streamers", method=["POST"])
+    @token_required(auth_provider=auth_provider, account_repository=account_repo)
+    def entroll_streamer_on_event(event_id: str):
+        user_account: UserAccount = g.user_account
+        payload = request.get_json()
+        payload["event_id"] = event_id
+        payload["author_id"] = user_account.id
+        command = EntrollStreamerOnEventCommand.model_validate(payload)
+        use_case = EntrollStreamersOnEvent(
+            event_repo=event_repo,
+            streamer_repository=streamer_repo,
+            participation_repository=participation_repo,
+            account_event_access_repository=account_event_access_repo,
+        )
+        use_case(command)
+        return "OK", 200
 
     @bp.route("/events/<string:event_id>/hightlights", methods=["POST"])
     @token_required(auth_provider=auth_provider, account_repository=account_repo)

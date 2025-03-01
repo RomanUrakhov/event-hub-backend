@@ -4,11 +4,17 @@ from application.interfaces.dao.event import (
     EventListItemDTO,
     IEventDAO,
 )
-from application.interfaces.repositories.account import IAccountEventAccessRepository
+from application.interfaces.repositories.account import (
+    IAccountAppAccessRepository,
+    IAccountEventAccessRepository,
+)
 from application.interfaces.repositories.participation import IParticipationRepository
 from application.interfaces.repositories.streamer import IStreamerRepository
 from common.helpers import ulid_from_datetime_utc
-from domain.exceptions.account import AccountDoesNotHaveAccessException
+from domain.exceptions.account import (
+    AccountDoesNotHaveAccessException,
+    AccountDoesNotHaveCreatorAccessException,
+)
 from domain.exceptions.event import (
     DuplicatedHightlightException,
     EventAlreadyExistsException,
@@ -53,12 +59,20 @@ class CreateEvent:
         event_repo: IEventRepository,
         streamer_repository: IStreamerRepository,
         participation_repository: IParticipationRepository,
+        account_app_access_repo: IAccountAppAccessRepository,
     ):
         self._event_repo = event_repo
         self._streamer_repo = streamer_repository
         self._participation_repo = participation_repository
+        self._account_app_access_repo = account_app_access_repo
 
     def __call__(self, data: CreateEventCommand) -> EventId:
+        account_app_access = self._account_app_access_repo.account_has_global_access(
+            data.author_id
+        )
+        if not account_app_access:
+            raise AccountDoesNotHaveCreatorAccessException(account_id=data.author_id)
+
         event = data.to_domain()
 
         existing_event = self._event_repo.get_by_slug(event.slug)

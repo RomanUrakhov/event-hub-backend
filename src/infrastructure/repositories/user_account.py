@@ -1,11 +1,12 @@
 from application.interfaces.repositories.account import (
+    IAccountAppAccessRepository,
     IAccountEventAccessRepository,
     IUserAccountRepository,
 )
 
 from sqlalchemy.orm import Session
 
-from domain.models.account import AccountEventAccess, UserAccount
+from domain.models.account import AccountAppAccess, AccountEventAccess, UserAccount
 
 
 class MySQLUserAccountRepository(IUserAccountRepository):
@@ -38,4 +39,18 @@ class MySQLAccountEventAccessRepository(IAccountEventAccessRepository):
                 AccountEventAccess.event_id == event_id,
             )
             .one_or_none()
+        )
+
+
+class MySQLAccountAppAccessRepository(IAccountAppAccessRepository):
+    def __init__(self, session: Session):
+        self._session = session
+
+    def account_has_global_access(self, account_id: str) -> bool:
+        """Check if a user has a record in account_app_access (meaning they have global admin access)."""
+        return (
+            self._session.query(AccountAppAccess)
+            .filter(AccountAppAccess.account_id == account_id)
+            .one_or_none()
+            is not None
         )

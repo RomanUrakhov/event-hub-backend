@@ -19,3 +19,9 @@ class IAccountEventAccessRepository(ABC):
         self, account_id: str, event_id: str
     ) -> AccountEventAccess | None:
         pass
+
+
+class IAccountAppAccessRepository(ABC):
+    @abstractmethod
+    def account_has_global_access(self, account_id: str) -> bool:
+        pass

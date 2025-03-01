@@ -10,6 +10,7 @@ from infrastructure.repositories.participation import (
     MySQLParticipationRepository,
 )
 from infrastructure.repositories.user_account import (
+    MySQLAccountAppAccessRepository,
     MySQLAccountEventAccessRepository,
     MySQLUserAccountRepository,
 )
@@ -59,6 +60,7 @@ def _register_blueprints(app: Flask, session_factory):
     participation_repo = MySQLParticipationRepository(session)
     account_repository = MySQLUserAccountRepository(session)
     account_event_access_repository = MySQLAccountEventAccessRepository(session)
+    account_app_access_repo = MySQLAccountAppAccessRepository(session)
 
     event_dao = MySQLEventDAO(session)
     streamer_dao = MySQLStreamerDAO(session)
@@ -83,6 +85,7 @@ def _register_blueprints(app: Flask, session_factory):
         event_dao=event_dao,
         account_repo=account_repository,
         account_event_access_repo=account_event_access_repository,
+        account_app_access_repo=account_app_access_repo,
     )
     app.register_blueprint(event_bp, url_prefix=app.config["APPLICATION_ROOT"])
 

@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from api.controllers.auth import token_required
 from application.interfaces.dao.event import IEventDAO
 from application.interfaces.repositories.account import (
+    IAccountAppAccessRepository,
     IAccountEventAccessRepository,
     IUserAccountRepository,
 )
@@ -11,7 +12,10 @@ from application.interfaces.repositories.participation import IParticipationRepo
 from application.interfaces.repositories.streamer import IStreamerRepository
 from application.interfaces.services.auth import IAuthProvider
 from application.use_cases.dto.event import AttachHighlightsCommand, CreateEventCommand
-from domain.exceptions.account import AccountDoesNotHaveAccessException
+from domain.exceptions.account import (
+    AccountDoesNotHaveAccessException,
+    AccountDoesNotHaveCreatorAccessException,
+)
 from domain.exceptions.event import EventAlreadyExistsException, EventNotFoundException
 from domain.models.account import UserAccount
 from src.api.schemas.event import GetEventByIdResponse, ListAllEventsResponse
@@ -32,6 +36,7 @@ def create_event_blueprint(
     participation_repo: IParticipationRepository,
     account_repo: IUserAccountRepository,
     account_event_access_repo: IAccountEventAccessRepository,
+    account_app_access_repo: IAccountAppAccessRepository,
 ):
     bp = Blueprint("event", __name__)
 
@@ -51,9 +56,15 @@ def create_event_blueprint(
         return jsonify(events_response.model_dump()), 200
 
     @bp.route("/events", methods=["POST"])
+    @token_required(auth_provider=auth_provider, account_repository=account_repo)
     def create_event():
-        command = CreateEventCommand.model_validate(request.json)
-        use_case = CreateEvent(event_repo, streamer_repo, participation_repo)
+        user_account: UserAccount = g.user_account
+        payload = request.get_json()
+        payload["author_id"] = user_account.id
+        command = CreateEventCommand.model_validate(payload)
+        use_case = CreateEvent(
+            event_repo, streamer_repo, participation_repo, account_app_access_repo
+        )
         event_id = use_case(command)
         return jsonify(
             {
@@ -95,5 +106,11 @@ def create_event_blueprint(
         return jsonify(
             {"error": str(e), "account_id": e.account_id, "event_id": e.event_id}
         ), 403
+
+    @bp.errorhandler(AccountDoesNotHaveCreatorAccessException)
+    def handle_account_doesn_have_creator_access_exception(
+        e: AccountDoesNotHaveCreatorAccessException,
+    ):
+        return jsonify({"error": str(e), "account_id": e.account_id})
 
     return bp

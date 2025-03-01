@@ -49,3 +49,19 @@ class AccountEventAccess(Base):
 
     def can_moderate_highlights_on_event(self) -> bool:
         return self.role.name in (RoleName.ADMIN, RoleName.MODERATOR)
+
+
+class AccountAppAccess(Base):
+    __tablename__ = "account_app_access"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    account_id: Mapped[str] = mapped_column(
+        ForeignKey("user_account.id"), nullable=False, unique=True
+    )
+
+    def is_admin(self) -> bool:
+        """Check if the account has admin-level access (global access)."""
+        return True  # For now presence in this table means admin access
+
+    def __repr__(self) -> str:
+        return f"<AccountAppAccess(id={self.id}, account_id={self.account_id})>"

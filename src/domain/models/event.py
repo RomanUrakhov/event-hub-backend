@@ -33,6 +33,7 @@ class Event(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     end_date: Mapped[date] = mapped_column(Date, nullable=False)
+    author_id: Mapped[str] = mapped_column(String, nullable=False)
     image_id: Mapped[str | None] = mapped_column(String, nullable=True)
     description: Mapped[str | None] = mapped_column(String, nullable=True)
 
@@ -47,7 +48,7 @@ class Event(Base):
     # this required me to remove 'slug' column from db but still we can use it...
     @hybrid_property
     def slug(self):
-        return re.sub(r"\W+", "-", str(name).lower()).strip("-")
+        return re.sub(r"\W+", "-", str(self.name).lower()).strip("-")
 
     def attach_highlight(self, h: Highlight):
         if h in self.highlights:

@@ -15,6 +15,7 @@ class CreateEventCommand(BaseModel):
     name: str
     start_date: date
     end_date: date
+    author_id: str
     image_id: str | None = Field(default=None)
     description: str | None = Field(default=None)
     additional_links: list[EventAdditionalLinkModel] = Field(default_factory=list)
@@ -31,6 +32,7 @@ class CreateEventCommand(BaseModel):
         return Event(
             id=ulid_from_datetime_utc(),
             name=self.name,
+            author_id=self.author_id,
             start_date=self.start_date,
             end_date=self.end_date,
             image_id=self.image_id,

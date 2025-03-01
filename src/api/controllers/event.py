@@ -67,7 +67,8 @@ def create_event_blueprint(
     def attach_highlights(event_id: str):
         user_account: UserAccount = g.user_account
         payload = request.get_json()
-        payload = {"event_id": event_id, "author_id": user_account.id, **payload}
+        payload["event_id"] = event_id
+        payload["author_id"] = user_account.id
         command = AttachHighlightsCommand.model_validate(payload)
         use_case = AttachHightlihtsToEvent(event_repo, account_event_access_repo)
         attached_urls = use_case(command)

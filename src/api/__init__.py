@@ -51,6 +51,7 @@ def _register_blueprints(app: Flask, session_factory):
     from .controllers.event import create_event_blueprint
     from .controllers.misc import create_misc_blueprint
     from .controllers.streamer import create_streamer_blueprint
+    from .controllers.account import create_account_blueprint
 
     # TODO: maybe create a session per request - not on app startup
     session = session_factory()
@@ -99,5 +100,13 @@ def _register_blueprints(app: Flask, session_factory):
         account_repo=account_repository,
     )
     app.register_blueprint(streamer_bp, url_prefix=app.config["APPLICATION_ROOT"])
+
+    account_bp = create_account_blueprint(
+        account_repo=account_repository,
+        account_event_access_repo=account_event_access_repository,
+        account_app_access_repo=account_app_access_repo,
+        auth_provider=auth_provider,
+    )
+    app.register_blueprint(account_bp, url_prefix=app.config["APPLICATION_ROOT"])
 
     return app

@@ -41,6 +41,13 @@ class MySQLAccountEventAccessRepository(IAccountEventAccessRepository):
             .one_or_none()
         )
 
+    def list_account_accesses(self, account_id: str) -> list[AccountEventAccess]:
+        return (
+            self._session.query(AccountEventAccess)
+            .filter(AccountEventAccess.account_id == account_id)
+            .all()
+        )
+
 
 class MySQLAccountAppAccessRepository(IAccountAppAccessRepository):
     def __init__(self, session: Session):

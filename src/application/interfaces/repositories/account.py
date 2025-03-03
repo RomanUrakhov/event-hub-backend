@@ -20,6 +20,10 @@ class IAccountEventAccessRepository(ABC):
     ) -> AccountEventAccess | None:
         pass
 
+    @abstractmethod
+    def list_account_accesses(self, account_id: str) -> list[AccountEventAccess]:
+        pass
+
 
 class IAccountAppAccessRepository(ABC):
     @abstractmethod

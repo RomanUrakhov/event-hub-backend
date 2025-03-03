@@ -1,12 +1,12 @@
 from datetime import date
 from typing import Optional
+
 from flask import url_for
 from pydantic import BaseModel, ConfigDict
 
 from application.interfaces.dao.event import EventDetailsDTO, EventListItemDTO
 from domain.models.event import EventAdditionalLink
 from domain.models.highlight import Highlight
-
 
 # TODO: refactor this mess of models (maybe don't give a damn and use domain models as reference)
 # TODO: add fields ordering for better client's side expirience

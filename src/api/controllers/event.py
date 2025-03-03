@@ -78,7 +78,7 @@ def create_event_blueprint(
             }
         ), 201
 
-    @bp.route("/events/<string:event_id>/streamers", method=["POST"])
+    @bp.route("/events/<string:event_id>/streamers", methods=["POST"])
     @token_required(auth_provider=auth_provider, account_repository=account_repo)
     def entroll_streamer_on_event(event_id: str):
         user_account: UserAccount = g.user_account

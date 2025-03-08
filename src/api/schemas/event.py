@@ -1,12 +1,10 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 from flask import url_for
-from pydantic import BaseModel, ConfigDict
+from pydantic import AnyUrl, BaseModel, ConfigDict
 
 from application.interfaces.dao.event import EventDetailsDTO, EventListItemDTO
-from domain.models.event import EventAdditionalLink
-from domain.models.highlight import Highlight
 
 # TODO: refactor this mess of models (maybe don't give a damn and use domain models as reference)
 # TODO: add fields ordering for better client's side expirience
@@ -26,6 +24,17 @@ class Image(BaseModel):
         return None
 
 
+class GetEventByIdHighlight(BaseModel):
+    author_id: str
+    url: AnyUrl
+    attached_datetime: datetime
+
+
+class GetEventByIdAdditionalLink(BaseModel):
+    url: AnyUrl
+    name: str
+
+
 class GetEventByIdResponse(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -35,8 +44,8 @@ class GetEventByIdResponse(BaseModel):
     description: str | None
     start_date: date
     end_date: date
-    additional_links: list[EventAdditionalLink]
-    highligths: list[Highlight]
+    additional_links: list[GetEventByIdAdditionalLink]
+    highlights: list[GetEventByIdHighlight]
 
     @classmethod
     def from_dto(cls, dto: EventDetailsDTO) -> "GetEventByIdResponse":
@@ -47,8 +56,18 @@ class GetEventByIdResponse(BaseModel):
             description=dto.description,
             start_date=dto.start_date,
             end_date=dto.end_date,
-            additional_links=dto.additional_links,
-            highligths=dto.highlights,
+            additional_links=[
+                GetEventByIdAdditionalLink(url=AnyUrl(li.url), name=li.name)
+                for li in dto.additional_links
+            ],
+            highlights=[
+                GetEventByIdHighlight(
+                    author_id=h.author_id,
+                    url=AnyUrl(h.url),
+                    attached_datetime=h.attached_datetime,
+                )
+                for h in dto.highlights
+            ],
         )
 
 

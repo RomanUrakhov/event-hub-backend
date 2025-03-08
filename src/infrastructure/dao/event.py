@@ -2,7 +2,9 @@ from sqlalchemy.orm import Session, load_only
 
 from datetime import date
 from application.interfaces.dao.event import (
+    EventDetailsAdditionalLinkDTO,
     EventDetailsDTO,
+    EventDetailsHighlightDTO,
     EventListItemDTO,
     IEventDAO,
 )
@@ -60,6 +62,20 @@ class MySQLEventDAO(IEventDAO):
         if not event_query:
             return None
 
+        hl_dtos = [
+            EventDetailsHighlightDTO(
+                author_id=highlight.author_id,
+                url=highlight.url,
+                attached_datetime=highlight.attached_datetime,
+            )
+            for highlight in event_query.highlights
+        ]
+
+        additional_links_dtos = [
+            EventDetailsAdditionalLinkDTO(url=l.url, name=l.name)
+            for l in event_query.additional_links
+        ]
+
         detailed_event = EventDetailsDTO(
             id=event_query.id,
             name=event_query.name,
@@ -67,8 +83,8 @@ class MySQLEventDAO(IEventDAO):
             end_date=event_query.end_date,
             image_id=event_query.image_id,
             description=event_query.description,
-            additional_links=event_query.additional_links,
-            highlights=event_query.highlights,
+            additional_links=additional_links_dtos,
+            highlights=hl_dtos,
         )
 
         return detailed_event

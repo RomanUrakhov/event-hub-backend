@@ -1,9 +1,19 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 
-from domain.models.event import EventAdditionalLink
-from domain.models.highlight import Highlight
+
+@dataclass
+class EventDetailsAdditionalLinkDTO:
+    url: str
+    name: str
+
+
+@dataclass
+class EventDetailsHighlightDTO:
+    author_id: str
+    url: str
+    attached_datetime: datetime
 
 
 @dataclass
@@ -14,8 +24,8 @@ class EventDetailsDTO:
     description: str | None
     start_date: date
     end_date: date
-    additional_links: list[EventAdditionalLink] = field(default_factory=list)
-    highlights: list[Highlight] = field(default_factory=list)
+    additional_links: list[EventDetailsAdditionalLinkDTO] = field(default_factory=list)
+    highlights: list[EventDetailsHighlightDTO] = field(default_factory=list)
 
 
 @dataclass

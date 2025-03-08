@@ -50,7 +50,7 @@ def create_event_blueprint(
         use_case = GetEventById(event_dao)
         event_dto = use_case(id)
         event_reponse = GetEventByIdResponse.from_dto(event_dto)
-        return jsonify(event_reponse.model_dump()), 200
+        return jsonify(event_reponse.model_dump(mode="json")), 200
 
     @bp.route("/events/", methods=["GET"])
     def list_events():

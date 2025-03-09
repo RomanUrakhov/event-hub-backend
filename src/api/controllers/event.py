@@ -1,4 +1,5 @@
-from flask import Blueprint, jsonify, request, url_for, g
+from flask import jsonify, request, url_for, g
+from apiflask import APIBlueprint
 from pydantic import ValidationError
 
 from api.controllers.auth import token_required
@@ -43,7 +44,7 @@ def create_event_blueprint(
     account_event_access_repo: IAccountEventAccessRepository,
     account_app_access_repo: IAccountAppAccessRepository,
 ):
-    bp = Blueprint("event", __name__)
+    bp = APIBlueprint("event", __name__)
 
     @bp.route("/events/<string:id>", methods=["GET"])
     def get_event(id: str):

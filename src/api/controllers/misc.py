@@ -1,5 +1,6 @@
 import os
-from flask import Blueprint, current_app, jsonify, request, send_from_directory, url_for
+from flask import current_app, jsonify, request, send_from_directory, url_for
+from apiflask import APIBlueprint
 from werkzeug.utils import secure_filename
 from uuid import uuid4
 
@@ -13,12 +14,12 @@ def allowed_file(filename: str) -> bool:
 
 
 def create_misc_blueprint():
-    bp = Blueprint("misc", __name__)
+    bp = APIBlueprint("misc", __name__)
 
     @bp.route("/images/<string:image_id>", methods=["GET"])
     def get_image(image_id: str):
         response = send_from_directory(
-            f'{current_app.config["APPLICATION_STATIC_DIR"]}/images', image_id
+            f"{current_app.config['APPLICATION_STATIC_DIR']}/images", image_id
         )
         return response
 

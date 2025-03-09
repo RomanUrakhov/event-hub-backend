@@ -1,4 +1,4 @@
-from flask import Flask
+from apiflask import APIFlask
 
 from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import sessionmaker
@@ -24,8 +24,8 @@ from infrastructure.repositories.event import (
 )
 
 
-def create_app() -> Flask:
-    app = Flask(__name__)
+def create_app() -> APIFlask:
+    app = APIFlask(__name__)
 
     config = Config()
     app.config.from_object(config)
@@ -47,7 +47,7 @@ def create_app() -> Flask:
     return app
 
 
-def _register_blueprints(app: Flask, session_factory):
+def _register_blueprints(app: APIFlask, session_factory):
     from .controllers.event import create_event_blueprint
     from .controllers.misc import create_misc_blueprint
     from .controllers.streamer import create_streamer_blueprint

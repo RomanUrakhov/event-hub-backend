@@ -1,4 +1,5 @@
-from flask import Blueprint, jsonify, request
+from flask import jsonify, request
+from apiflask import APIBlueprint
 from pydantic import ValidationError
 from api.controllers.auth import token_required
 from api.schemas.streamer import CreateStreamerResponse, GetStreamerDetailsResponse
@@ -20,7 +21,7 @@ def create_streamer_blueprint(
     auth_provider: IAuthProvider,
     account_repo: IUserAccountRepository,
 ):
-    bp = Blueprint("streamer", __name__)
+    bp = APIBlueprint("streamer", __name__)
 
     @bp.route("/streamers", methods=["POST"])
     @token_required(auth_provider=auth_provider, account_repository=account_repo)

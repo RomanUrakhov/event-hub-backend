@@ -1,4 +1,5 @@
-from flask import Blueprint, jsonify, request, g
+from flask import jsonify, request, g
+from apiflask import APIBlueprint
 from api.schemas.account import (
     AccountAccessSchema,
     EventAccessSchema,
@@ -19,7 +20,7 @@ def create_account_blueprint(
     account_app_access_repo: IAccountAppAccessRepository,
     auth_provider: IAuthProvider,
 ):
-    bp = Blueprint("account", __name__)
+    bp = APIBlueprint("account", __name__)
 
     @bp.route("/account/access", methods=["GET"])
     @token_required(auth_provider=auth_provider, account_repository=account_repo)

@@ -1,77 +1,101 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
-from pydantic import (
-    AnyHttpUrl,
-    BaseModel,
-    Field,
-    ConfigDict,
-    alias_generators,
-)
+from flask import url_for
+from pydantic import AnyUrl, BaseModel, ConfigDict
 
+from application.interfaces.dao.event import EventDetailsDTO, EventListItemDTO
 
-class EventAdditionalLink(BaseModel):
-    name: str
-    link: AnyHttpUrl
-
-
-class EventCreateRequest(BaseModel):
-    name: str
-    description: str
-    image_id: str | None = Field(default=None)
-    owner_account_id: str
-    start_date: date
-    end_date: date
-    additional_links: list[EventAdditionalLink] = Field(default=[])
-    participant_ids: list[str] = Field(default=[])
-
-    model_config = ConfigDict(
-        alias_generator=alias_generators.to_camel, populate_by_name=True
-    )
-
-
-class EventCreateResponse(BaseModel):
-    id_: str
+# TODO: refactor this mess of models (maybe don't give a damn and use domain models as reference)
+# TODO: add fields ordering for better client's side expirience
 
 
 class Image(BaseModel):
-    id_: str
-    resource: str
+    id: str
+    url: str
+
+    @classmethod
+    def from_image_id(cls, image_id: str | None) -> Optional["Image"]:
+        if image_id:
+            return cls(
+                id=image_id,
+                url=url_for("misc.get_image", image_id=image_id, _external=True),
+            )
+        return None
 
 
-class EventParticipant(BaseModel):
-    id_: str
+class GetEventByIdHighlight(BaseModel):
+    author_id: str
+    url: AnyUrl
+    attached_datetime: datetime
+
+
+class GetEventByIdAdditionalLink(BaseModel):
+    url: AnyUrl
     name: str
-    avatar_url: str = Field(default=None)
 
 
-class GetEventRequest(BaseModel):
-    id_: str
+class GetEventByIdResponse(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-
-class ErrorResponse(BaseModel):
-    error_message: str
-
-
-class BaseEventResponse(BaseModel):
-    id_: str
+    id: str
     name: str
-    description: str
-    image: Optional[Image] = None
+    image: Image | None
+    description: str | None
     start_date: date
     end_date: date
-    additional_links: list[EventAdditionalLink]
-    participants: list[EventParticipant]
+    additional_links: list[GetEventByIdAdditionalLink]
+    highlights: list[GetEventByIdHighlight]
+
+    @classmethod
+    def from_dto(cls, dto: EventDetailsDTO) -> "GetEventByIdResponse":
+        return cls(
+            id=dto.id,
+            name=dto.name,
+            image=Image.from_image_id(dto.image_id),
+            description=dto.description,
+            start_date=dto.start_date,
+            end_date=dto.end_date,
+            additional_links=[
+                GetEventByIdAdditionalLink(url=AnyUrl(li.url), name=li.name)
+                for li in dto.additional_links
+            ],
+            highlights=[
+                GetEventByIdHighlight(
+                    author_id=h.author_id,
+                    url=AnyUrl(h.url),
+                    attached_datetime=h.attached_datetime,
+                )
+                for h in dto.highlights
+            ],
+        )
 
 
-class GetEventResponse(BaseEventResponse):
-    pass
+class EventListItem(BaseModel):
+    id: str
+    name: str
+    image: Image | None
+    start_date: date
+    end_date: date
+
+    @classmethod
+    def from_dto(cls, dto: EventListItemDTO) -> "EventListItem":
+        return cls(
+            id=dto.id,
+            name=dto.name,
+            image=Image.from_image_id(dto.image_id),
+            start_date=dto.start_date,
+            end_date=dto.end_date,
+        )
 
 
-class ListEventsResponse(BaseModel):
-    events: list[BaseEventResponse]
+class ListAllEventsResponse(BaseModel):
+    page_size: int
+    total: int
+    events: list[EventListItem]
 
-
-class EventNotFoundResponse(BaseModel):
-    id_: str
-    message: str = Field(default="Can't found Event with such ID")
+    @classmethod
+    def from_dto(cls, dto: list[EventListItemDTO]) -> "ListAllEventsResponse":
+        event_items = [EventListItem.from_dto(li) for li in dto]
+        items_len = len(event_items)
+        return cls(page_size=items_len, total=items_len, events=event_items)

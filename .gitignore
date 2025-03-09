@@ -2,7 +2,10 @@
 .env
 __pycache__
 .py[cod]
-.vscod
+.vscode
 .venv
 venv
 .idea
+.qodo
+
+static/

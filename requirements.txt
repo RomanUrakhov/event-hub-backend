@@ -8,6 +8,7 @@ charset-normalizer==3.2.0
 click==8.1.7
 cryptography==41.0.4
 Flask==2.3.3
+flask-cors==5.0.1
 Flask-HTTPAuth==4.8.0
 flask-marshmallow==1.3.0
 greenlet==3.0.3

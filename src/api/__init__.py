@@ -25,7 +25,7 @@ from infrastructure.repositories.event import (
 
 
 def create_app() -> APIFlask:
-    app = APIFlask(__name__)
+    app = APIFlask(__name__, docs_ui="redoc")
 
     config = Config()
     app.config.from_object(config)

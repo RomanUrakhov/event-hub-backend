@@ -36,7 +36,7 @@ class Image(Schema):
 class EventListItem(Schema):
     id = String()
     name = String()
-    image = Nested(Image, required=False)
+    image = Nested(Image, nullable=True)
     start_date = Date()  # TODO: change date formatting (i.e. return in ISO format)
     end_date = Date()
 

@@ -1,7 +1,6 @@
 from flask import url_for
-from apiflask import Schema
+from apiflask import Schema, fields
 from apiflask.fields import String, List, Nested, Date
-from pydantic import BaseModel, PrivateAttr, computed_field
 
 from application.interfaces.dao.streamer import StreamerDetailsDTO, StreamerEventItem
 
@@ -9,14 +8,21 @@ from application.interfaces.dao.streamer import StreamerDetailsDTO, StreamerEven
 # TODO: refactor this mess of models (maybe don't give a damn and use domain models as reference)
 
 
-class CreateStreamerResponse(BaseModel):
-    id: str
-    _url: str = PrivateAttr(default=None)
+class CreateStreamerRequest(Schema):
+    twitch_id = fields.String(required=True)
+    name = fields.String(required=True)
 
-    @computed_field
-    @property
-    def url(self) -> str:
-        return url_for("streamer.get_streamer", streamer_id=self.id, _external=True)
+
+class CreateStreamerResponse(Schema):
+    id = fields.String(required=True)
+
+    url = fields.Hyperlinks(
+        {"self": fields.URLFor("streamer.get_streamer", values={"streamer_id": "<id>"})}
+    )
+
+    @classmethod
+    def from_dto(cls, streamer_id: str) -> dict:
+        return {"id": streamer_id}
 
 
 class Image(Schema):

@@ -6,6 +6,7 @@ from src.application.interfaces.repositories.account import IUserAccountReposito
 from src.application.use_cases.auth import login_account
 
 
+# TODO: maybe rewrite to Flask-HTTPAuth
 def token_required(
     auth_provider: IAuthProvider, account_repository: IUserAccountRepository
 ):

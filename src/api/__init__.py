@@ -26,6 +26,14 @@ from infrastructure.repositories.event import (
 
 def create_app() -> APIFlask:
     app = APIFlask(__name__, docs_ui="redoc")
+    app.security_schemes = app.security_schemes = {
+        "TwitchJWTAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "JWT token from Twitch, passed in the Authorization header as 'Bearer <token>'.",
+        }
+    }
 
     config = Config()
     app.config.from_object(config)

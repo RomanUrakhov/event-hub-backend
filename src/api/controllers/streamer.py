@@ -26,6 +26,7 @@ def create_streamer_blueprint(
     bp = APIBlueprint("streamer", __name__)
 
     @bp.route("/streamers", methods=["POST"])
+    @bp.doc(security=[{"TwitchJWTAuth": []}])
     @bp.input(CreateStreamerRequest)
     @bp.output(CreateStreamerResponse, status_code=201)
     @token_required(auth_provider=auth_provider, account_repository=account_repo)

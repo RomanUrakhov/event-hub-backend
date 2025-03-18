@@ -48,20 +48,3 @@ def login_account(
     user_account_repo.create_account(new_user_account)
 
     return _create_login_response(auth_data, new_user_account)
-
-
-# def has_system_access(
-#     user_id: str, user_account_repository: IUserAccountRepository
-# ) -> bool:
-#     user = user_account_repository.get_by_id(user_id)
-#     return user.can_create_event()
-
-
-# def has_event_access(
-#     user_id: str,
-#     event_id: str,
-#     action: SpecificEventAction,
-#     user_account_repository: IUserAccountRepository,
-# ) -> bool:
-#     user = user_account_repository.get_by_id(user_id)
-#     return user.can_perform_action_on_event(event_id, action)

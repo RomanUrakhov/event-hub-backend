@@ -1,5 +1,6 @@
 from functools import wraps
-from flask import Blueprint, g, jsonify, request
+from flask import g, jsonify, request
+from apiflask import abort, APIBlueprint
 
 from application.interfaces.services.auth import AuthException, IAuthProvider
 from src.application.interfaces.repositories.account import IUserAccountRepository
@@ -13,17 +14,21 @@ def token_required(
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            id_token = request.cookies.get("id_token")
+            auth_header = request.headers.get("Authorization")
+
+            if not auth_header or not auth_header.startswith("Bearer "):
+                return abort(401)
+
+            id_token = auth_header.split(" ", 1)[1]
 
             if not id_token:
-                return jsonify({"error": "Unauthorized"}), 401
+                return abort(401)
 
             # TODO: distinguish between different types of error (e.g. "Id Token Expired", etc.)
             try:
                 user_payload = auth_provider.validate_token(id_token)
             except AuthException:
-                return jsonify({"error": "Unauthorized"}), 401
-
+                return abort(401)
             account = account_repository.get_by_external_id(user_payload.external_id)
 
             g.user_account = account
@@ -38,7 +43,7 @@ def token_required(
 def create_auth_blueprint(
     auth_provider: IAuthProvider, account_repository: IUserAccountRepository
 ):
-    bp = Blueprint("auth", __name__)
+    bp = APIBlueprint("auth", __name__)
 
     @bp.route("/auth/twitch", methods=["POST"])
     def twitch_auth():

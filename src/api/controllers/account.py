@@ -21,6 +21,16 @@ def create_account_blueprint(
 ):
     bp = APIBlueprint("account", __name__)
 
+    def _get_event_access(access):
+        return {
+            "can_enroll_streamers": access.can_enroll_streamers_on_event()
+            if access
+            else False,
+            "can_moderate_highlights": access.can_moderate_highlights_on_event()
+            if access
+            else False,
+        }
+
     @bp.route("/account/access", methods=["GET"])
     @bp.input(AccountAccessQueryParams, location="query")
     @bp.output(AccountAccessSchema)
@@ -37,22 +47,10 @@ def create_account_blueprint(
             access = account_event_access_repo.get_account_access(
                 user_account.id, event_id
             )
-            events = {
-                event_id: {
-                    "can_enroll_streamers": access.can_enroll_streamers_on_event()
-                    if access
-                    else False,
-                    "can_moderate_highlights": access.can_moderate_highlights_on_event()
-                    if access
-                    else False,
-                }
-            }
+            events = {event_id: _get_event_access(access)}
         else:
             events = {
-                access.event_id: {
-                    "can_enroll_streamers": access.can_enroll_streamers_on_event(),
-                    "can_moderate_highlights": access.can_moderate_highlights_on_event(),
-                }
+                access.event_id: _get_event_access
                 for access in account_event_access_repo.list_account_accesses(
                     user_account.id
                 )

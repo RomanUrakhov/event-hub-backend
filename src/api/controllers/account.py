@@ -32,6 +32,7 @@ def create_account_blueprint(
         }
 
     @bp.route("/account/access", methods=["GET"])
+    @bp.doc(security=[{"TwitchJWTAuth": []}])
     @bp.input(AccountAccessQueryParams, location="query")
     @bp.output(AccountAccessSchema)
     @token_required(auth_provider=auth_provider, account_repository=account_repo)

@@ -27,6 +27,7 @@ def create_misc_blueprint():
         return response
 
     @bp.route("/images", methods=["POST"])
+    @bp.doc(security=[{"TwitchJWTAuth": []}])
     @bp.input(UploadImageSchema, location="files")
     @bp.output(UploadImageResponseSchema, 201)
     def upload_image(files_data):

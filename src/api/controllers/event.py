@@ -1,6 +1,5 @@
-from flask import jsonify, request, url_for, g
-from apiflask import APIBlueprint
-from pydantic import ValidationError
+from flask import g, url_for
+from apiflask import APIBlueprint, abort
 
 from api.controllers.auth import token_required
 from application.interfaces.dao.event import IEventDAO
@@ -23,7 +22,15 @@ from domain.exceptions.account import (
 )
 from domain.exceptions.event import EventAlreadyExistsException, EventNotFoundException
 from domain.models.account import UserAccount
-from src.api.schemas.event import GetEventByIdResponse, ListAllEventsResponse
+from src.api.schemas.event import (
+    AttachHighlightsRequestSchema,
+    AttachHighlightsResponseSchema,
+    CreateEventRequestSchema,
+    CreateEventResponseSchema,
+    EnrollStreamerRequestSchema,
+    GetEventByIdResponseSchema,
+    ListAllEventsResponseSchema,
+)
 from src.application.interfaces.repositories.event import IEventRepository
 from src.application.use_cases.event import (
     AttachHightlihtsToEvent,
@@ -32,6 +39,8 @@ from src.application.use_cases.event import (
     CreateEvent,
     ListAllEvents,
 )
+
+# TODO: make custom error schemas for my domain exception in order not to repeat myself in @bp.doc()
 
 
 def create_event_blueprint(
@@ -47,93 +56,190 @@ def create_event_blueprint(
     bp = APIBlueprint("event", __name__)
 
     @bp.route("/events/<string:id>", methods=["GET"])
+    @bp.output(GetEventByIdResponseSchema)
+    @bp.doc(
+        responses={
+            404: {
+                "description": "Event not found",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "status_code": 404,
+                            "message": "Event not found",
+                            "extra_data": {"event_id": "123"},
+                        }
+                    }
+                },
+            }
+        }
+    )
     def get_event(id: str):
         use_case = GetEventById(event_dao)
-        event_dto = use_case(id)
-        event_reponse = GetEventByIdResponse.from_dto(event_dto)
-        return jsonify(event_reponse.model_dump(mode="json")), 200
+        try:
+            event_dto = use_case(id)
+        except EventNotFoundException as e:
+            abort(404, message="Event not found", extra_data={"event_id": e.event_id})
+        return GetEventByIdResponseSchema.from_dto(event_dto)
 
     @bp.route("/events/", methods=["GET"])
+    @bp.output(ListAllEventsResponseSchema)
     def list_events():
         # TODO: add pagination
         use_case = ListAllEvents(event_dao)
         events_dtos = use_case()
-        events_response = ListAllEventsResponse.from_dto(events_dtos)
-        return jsonify(events_response.model_dump()), 200
+        return ListAllEventsResponseSchema.from_dto(events_dtos)
 
     @bp.route("/events", methods=["POST"])
+    @bp.input(CreateEventRequestSchema)
+    @bp.output(CreateEventResponseSchema, status_code=201)
+    @bp.doc(
+        security=[{"TwitchJWTAuth": []}],
+        responses={
+            403: {
+                "description": "Forbidden - No creator access",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "status_code": 403,
+                            "message": "User does not have creator access",
+                            "extra_data": {"account_id": "string <uuid>"},
+                        }
+                    }
+                },
+            },
+            409: {
+                "description": "Conflict - Event already exists",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "status_code": 409,
+                            "message": "Event with such name already exists",
+                            "extra_data": {"event_name": "MyEvent"},
+                        }
+                    }
+                },
+            },
+        },
+    )
     @token_required(auth_provider=auth_provider, account_repository=account_repo)
-    def create_event():
+    def create_event(json_data):
         user_account: UserAccount = g.user_account
-        payload = request.get_json()
-        payload["author_id"] = user_account.id
-        command = CreateEventCommand.model_validate(payload)
+        json_data["author_id"] = user_account.id
+        command = CreateEventCommand.model_validate(json_data)
         use_case = CreateEvent(
             event_repo, streamer_repo, participation_repo, account_app_access_repo
         )
-        event_id = use_case(command)
-        return jsonify(
-            {
-                "url": url_for("event.get_event", id=event_id, _external=True),
-                "id": event_id,
-            }
-        ), 201
+        try:
+            event_id = use_case(command)
+        except AccountDoesNotHaveCreatorAccessException as e:
+            abort(403, message=str(e), extra_data={"account_id": e.account_id})
+        except EventAlreadyExistsException as e:
+            abort(
+                409,
+                message="Event with such name already exists",
+                extra_data={"event_name": e.event_name},
+            )
+        return {
+            "id": event_id,
+            "url": url_for("event.get_event", id=event_id, _external=True),
+        }
 
     @bp.route("/events/<string:event_id>/streamers", methods=["POST"])
+    @bp.input(EnrollStreamerRequestSchema)
+    @bp.doc(
+        security=[{"TwitchJWTAuth": []}],
+        responses={
+            403: {
+                "description": "Forbidden - User lacks access",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "status_code": 403,
+                            "message": "User does not have access to this event",
+                            "extra_data": {"account_id": "456"},
+                        }
+                    }
+                },
+            },
+            404: {
+                "description": "Not Found - Event does not exist",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "status_code": 404,
+                            "message": "Event not found",
+                            "extra_data": {"event_id": "123"},
+                        }
+                    }
+                },
+            },
+        },
+    )
     @token_required(auth_provider=auth_provider, account_repository=account_repo)
-    def entroll_streamer_on_event(event_id: str):
+    def entroll_streamer_on_event(event_id: str, json_data):
         user_account: UserAccount = g.user_account
-        payload = request.get_json()
-        payload["event_id"] = event_id
-        payload["author_id"] = user_account.id
-        command = EntrollStreamerOnEventCommand.model_validate(payload)
+        json_data["event_id"] = event_id
+        json_data["author_id"] = user_account.id
+        command = EntrollStreamerOnEventCommand.model_validate(json_data)
         use_case = EntrollStreamersOnEvent(
             event_repo=event_repo,
             streamer_repository=streamer_repo,
             participation_repository=participation_repo,
             account_event_access_repository=account_event_access_repo,
         )
-        use_case(command)
-        return "OK", 200
+        try:
+            use_case(command)
+        except AccountDoesNotHaveAccessException as e:
+            abort(403, message=str(e), extra_data={"account_id": e.account_id})
+        except EventNotFoundException as e:
+            abort(404, message="Event not found", extra_data={"event_id": e.event_id})
+        return {"message": "Streamer enrolled successfully"}, 200
 
     @bp.route("/events/<string:event_id>/hightlights", methods=["POST"])
+    @bp.input(AttachHighlightsRequestSchema)
+    @bp.output(AttachHighlightsResponseSchema, status_code=201)
+    @bp.doc(
+        security=[{"TwitchJWTAuth": []}],
+        responses={
+            403: {
+                "description": "Forbidden - User lacks access",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "status_code": 403,
+                            "message": "User does not have access to this event",
+                            "extra_data": {"account_id": "456"},
+                        }
+                    }
+                },
+            },
+            404: {
+                "description": "Not Found - Event does not exist",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "status_code": 404,
+                            "message": "Event not found",
+                            "extra_data": {"event_id": "123"},
+                        }
+                    }
+                },
+            },
+        },
+    )
     @token_required(auth_provider=auth_provider, account_repository=account_repo)
-    def attach_highlights(event_id: str):
+    def attach_highlights(event_id: str, json_data):
         user_account: UserAccount = g.user_account
-        payload = request.get_json()
-        payload["event_id"] = event_id
-        payload["author_id"] = user_account.id
-        command = AttachHighlightsCommand.model_validate(payload)
+        json_data["event_id"] = event_id
+        json_data["author_id"] = user_account.id
+        command = AttachHighlightsCommand.model_validate(json_data)
         use_case = AttachHightlihtsToEvent(event_repo, account_event_access_repo)
-        attached_urls = use_case(command)
-        return jsonify({"event_id": event_id, "highlights": attached_urls}), 201
-
-    @bp.errorhandler(EventNotFoundException)
-    def handle_event_not_found_exception(e: EventNotFoundException):
-        return jsonify({"error": "Event not found", "event_id": e.event_id}), 404
-
-    @bp.errorhandler(ValidationError)
-    def handle_validation_error(e: ValidationError):
-        return jsonify(e.errors()), 400
-
-    @bp.errorhandler(EventAlreadyExistsException)
-    def handle_event_already_exists_exception(e: EventAlreadyExistsException):
-        return jsonify(
-            {"error": "Event with such name already exists", "event_name": e.event_name}
-        ), 409
-
-    @bp.errorhandler(AccountDoesNotHaveAccessException)
-    def handle_account_does_not_have_access_exception(
-        e: AccountDoesNotHaveAccessException,
-    ):
-        return jsonify(
-            {"error": str(e), "account_id": e.account_id, "event_id": e.event_id}
-        ), 403
-
-    @bp.errorhandler(AccountDoesNotHaveCreatorAccessException)
-    def handle_account_doesn_have_creator_access_exception(
-        e: AccountDoesNotHaveCreatorAccessException,
-    ):
-        return jsonify({"error": str(e), "account_id": e.account_id})
+        try:
+            attached_urls = use_case(command)
+        except AccountDoesNotHaveAccessException as e:
+            abort(403, message=str(e), extra_data={"account_id": e.account_id})
+        except EventNotFoundException as e:
+            abort(404, message="Event not found", extra_data={"event_id": e.event_id})
+        return {"event_id": event_id, "highlights": attached_urls}
 
     return bp

@@ -98,7 +98,9 @@ def _register_blueprints(app: APIFlask, session_factory):
     )
     app.register_blueprint(event_bp, url_prefix=app.config["APPLICATION_ROOT"])
 
-    misc_bp = create_misc_blueprint()
+    misc_bp = create_misc_blueprint(
+        auth_provider=auth_provider, account_repository=account_repository
+    )
     app.register_blueprint(misc_bp, url_prefix=app.config["APPLICATION_ROOT"])
 
     streamer_bp = create_streamer_blueprint(

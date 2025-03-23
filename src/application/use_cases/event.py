@@ -83,8 +83,7 @@ class CreateEvent:
         if data.streamers_ids:
             streamers = self._streamer_repo.list_by_ids(data.streamers_ids)
             participations = [
-                Participation(ulid_from_datetime_utc(), event.id, s.id)
-                for s in streamers
+                Participation(event_id=event.id, streamer_id=s.id) for s in streamers
             ]
             if participations:
                 self._participation_repo.save_batch(participations)

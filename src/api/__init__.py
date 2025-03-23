@@ -34,6 +34,11 @@ def create_app() -> APIFlask:
             "description": "JWT token from Twitch, passed in the Authorization header as 'Bearer <token>'.",
         }
     }
+    app.config["SERVERS"] = [
+        # TODO: should this 'localhost' hardcodes be configurated? I think so...
+        {"name": "Dev Server", "url": "http://localhost:5000"},
+        # TODO: add production-ready server when it's ready :)
+    ]
 
     config = Config()
     app.config.from_object(config)

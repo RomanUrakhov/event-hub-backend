@@ -1,4 +1,4 @@
-from flask import Flask
+from apiflask import APIFlask
 
 from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import sessionmaker
@@ -24,8 +24,21 @@ from infrastructure.repositories.event import (
 )
 
 
-def create_app() -> Flask:
-    app = Flask(__name__)
+def create_app() -> APIFlask:
+    app = APIFlask(__name__, docs_ui="redoc")
+    app.security_schemes = app.security_schemes = {
+        "TwitchJWTAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "JWT token from Twitch, passed in the Authorization header as 'Bearer <token>'.",
+        }
+    }
+    app.config["SERVERS"] = [
+        # TODO: should this 'localhost' hardcodes be configurated? I think so...
+        {"name": "Dev Server", "url": "http://localhost:5000"},
+        # TODO: add production-ready server when it's ready :)
+    ]
 
     config = Config()
     app.config.from_object(config)
@@ -47,7 +60,7 @@ def create_app() -> Flask:
     return app
 
 
-def _register_blueprints(app: Flask, session_factory):
+def _register_blueprints(app: APIFlask, session_factory):
     from .controllers.event import create_event_blueprint
     from .controllers.misc import create_misc_blueprint
     from .controllers.streamer import create_streamer_blueprint
@@ -90,7 +103,9 @@ def _register_blueprints(app: Flask, session_factory):
     )
     app.register_blueprint(event_bp, url_prefix=app.config["APPLICATION_ROOT"])
 
-    misc_bp = create_misc_blueprint()
+    misc_bp = create_misc_blueprint(
+        auth_provider=auth_provider, account_repository=account_repository
+    )
     app.register_blueprint(misc_bp, url_prefix=app.config["APPLICATION_ROOT"])
 
     streamer_bp = create_streamer_blueprint(

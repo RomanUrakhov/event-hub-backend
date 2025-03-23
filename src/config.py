@@ -9,7 +9,7 @@ class Config:
     APPLICATION_HOST = os.getenv("APPLICATION_HOST")
     APPLICATION_ROOT = "/api"
     # TODO: deal with processing static files
-    APPLICATION_STATIC_DIR = "static"
+    APPLICATION_STATIC_DIR = "./../../static"
 
     TWITCH_CLIENT_ID = os.getenv("TWITCH_CLIENT_ID")
     TWITCH_CLIENT_SECRET = os.getenv("TWITCH_CLIENT_SECRET")

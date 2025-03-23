@@ -3,7 +3,7 @@
 
 from apiflask import Schema
 from apiflask.fields import String, List, Date, Nested, URL, Integer, URLFor
-from apiflask.validators import Length, OneOf
+from apiflask.validators import Length
 from apiflask.validators import URL as URLValidator
 from marshmallow import ValidationError, validates_schema
 

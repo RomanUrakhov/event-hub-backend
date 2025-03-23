@@ -5,9 +5,6 @@ from apiflask.fields import String, List, Nested, Date
 from application.interfaces.dao.streamer import StreamerDetailsDTO, StreamerEventItem
 
 
-# TODO: refactor this mess of models (maybe don't give a damn and use domain models as reference)
-
-
 class CreateStreamerRequest(Schema):
     twitch_id = fields.String(required=True)
     name = fields.String(required=True)
@@ -43,7 +40,7 @@ class EventListItem(Schema):
     id = String()
     name = String()
     image = Nested(Image, nullable=True)
-    start_date = Date()  # TODO: change date formatting (i.e. return in ISO format)
+    start_date = Date()
     end_date = Date()
 
     @classmethod

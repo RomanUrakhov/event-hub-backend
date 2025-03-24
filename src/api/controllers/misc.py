@@ -24,6 +24,7 @@ def create_misc_blueprint(
     bp = APIBlueprint("misc", __name__)
 
     @bp.route("/images/<string:image_id>", methods=["GET"])
+    @bp.doc(operation_id="getImageById")
     @bp.output(FileSchema(), content_type="image/*")
     def get_image(image_id: str):
         response = send_from_directory(
@@ -32,7 +33,7 @@ def create_misc_blueprint(
         return response
 
     @bp.route("/images", methods=["POST"])
-    @bp.doc(security=[{"TwitchJWTAuth": []}])
+    @bp.doc(operation_id="uploadImage", security=[{"TwitchJWTAuth": []}])
     @bp.input(UploadImageSchema, location="files")
     @bp.output(UploadImageResponseSchema, 201)
     @token_required(auth_provider=auth_provider, account_repository=account_repository)

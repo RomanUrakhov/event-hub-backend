@@ -46,6 +46,7 @@ def create_auth_blueprint(
     bp = APIBlueprint("auth", __name__)
 
     @bp.route("/auth/twitch", methods=["POST"])
+    @bp.doc(operation_id="authWithTwitch")
     def twitch_auth():
         data = request.get_json()
         code = data.get("code")

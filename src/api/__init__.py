@@ -1,5 +1,6 @@
 from apiflask import APIFlask
 
+from flask_cors import CORS
 from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -26,6 +27,7 @@ from infrastructure.repositories.event import (
 
 def create_app() -> APIFlask:
     app = APIFlask(__name__, docs_ui="redoc")
+    CORS(app, resources={r"/*": {"origins": "*"}})
     app.security_schemes = app.security_schemes = {
         "TwitchJWTAuth": {
             "type": "http",

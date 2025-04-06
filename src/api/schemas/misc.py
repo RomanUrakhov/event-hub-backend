@@ -12,4 +12,5 @@ class UploadImageResponseSchema(Schema):
         "misc.get_image",
         values={"image_id": "<id>"},
         description="URL to access the uploaded image",
+        required=True,
     )

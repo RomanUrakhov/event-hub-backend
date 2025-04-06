@@ -24,7 +24,7 @@ class AdditionalLinkSchema(Schema):
 class GetEventByIdResponseSchema(Schema):
     id = String(required=True)
     name = String(required=True)
-    image = Nested(ImageSchema, allow_none=True)
+    image = Nested(ImageSchema, nullable=True)
     description = String(allow_none=True)
     start_date = Date(required=True)
     end_date = Date(required=True)

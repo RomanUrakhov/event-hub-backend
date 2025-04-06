@@ -16,7 +16,7 @@ class ImageSchema(Schema):
 class EventListItemSchema(Schema):
     id = String(required=True)
     name = String(required=True)
-    image = Nested(ImageSchema, allow_none=True)
+    image = Nested(ImageSchema, nullable=True)
     start_date = Date(required=True)
     end_date = Date(required=True)
 

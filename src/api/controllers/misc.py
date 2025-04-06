@@ -28,7 +28,7 @@ def create_misc_blueprint(
     @bp.output(FileSchema(), content_type="image/*")
     def get_image(image_id: str):
         response = send_from_directory(
-            f"{current_app.config['APPLICATION_STATIC_DIR']}/images", image_id
+            current_app.config["APPLICATION_STATIC_DIR"], image_id
         )
         return response
 
@@ -49,7 +49,9 @@ def create_misc_blueprint(
             filename = f"{file_id}{filename}"
             file.save(
                 os.path.join(
-                    current_app.config["APPLICATION_STATIC_DIR"], "images", filename
+                    current_app.root_path,
+                    current_app.config["APPLICATION_STATIC_DIR"],
+                    filename,
                 )
             )
             return {"id": filename}

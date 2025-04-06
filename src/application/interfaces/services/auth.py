@@ -1,11 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import NamedTuple
 
-import jwt
-import requests
-from jwt import InvalidTokenError
-from jwt.api_jwt import decode
-
 
 class AuthException(Exception):
     pass

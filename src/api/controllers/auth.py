@@ -1,7 +1,8 @@
 from functools import wraps
-from flask import g, jsonify, request
+from flask import g, request
 from apiflask import abort, APIBlueprint
 
+from api.schemas.auth import AuthWithTwitchRequestSchema, AuthWithTwitchResponseSchema
 from application.interfaces.services.auth import AuthException, IAuthProvider
 from src.application.interfaces.repositories.account import IUserAccountRepository
 from src.application.use_cases.auth import login_account
@@ -46,13 +47,14 @@ def create_auth_blueprint(
     bp = APIBlueprint("auth", __name__)
 
     @bp.route("/auth/twitch", methods=["POST"])
-    @bp.doc(operation_id="authWithTwitch")
-    def twitch_auth():
-        data = request.get_json()
-        code = data.get("code")
-
-        if not code:
-            return jsonify({"error": "Missing authorization code"}), 400
+    @bp.input(AuthWithTwitchRequestSchema)
+    @bp.output(AuthWithTwitchResponseSchema)
+    @bp.doc(
+        operation_id="authWithTwitch",
+        responses={"400": {"description": "Twitch authentication flow failed"}},
+    )
+    def twitch_auth(json_data):
+        code = json_data.get("code")
 
         try:
             login_response = login_account(
@@ -61,8 +63,11 @@ def create_auth_blueprint(
                 user_account_repo=account_repository,
             )
         except AuthException as e:
-            return jsonify({"error": str(e)}), 400
+            abort(
+                400,
+                message=str(e),
+            )
 
-        return jsonify(login_response._asdict())
+        return login_response.model_dump()
 
     return bp

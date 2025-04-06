@@ -1,17 +1,8 @@
-from typing import NamedTuple
-
+from application.use_cases.dto.auth import LoginAccountResult, User
 from common.helpers import ulid_from_datetime_utc
 from domain.models.account import UserAccount
 from src.application.interfaces.repositories.account import IUserAccountRepository
 from src.infrastructure.services.auth import AuthPayload, IAuthProvider
-
-
-class LoginAccountResponse(NamedTuple):
-    id_token: str
-    refresh_token: str
-    user_avatar: str
-    user_name: str
-    user_id: str
 
 
 class AccountNotFoundException(Exception):
@@ -20,13 +11,15 @@ class AccountNotFoundException(Exception):
 
 def _create_login_response(
     auth_data: AuthPayload, user_account: UserAccount
-) -> LoginAccountResponse:
-    return LoginAccountResponse(
+) -> LoginAccountResult:
+    return LoginAccountResult(
         id_token=auth_data.access_token,
         refresh_token=auth_data.refresh_token,
-        user_avatar=auth_data.user_payload.avatar,
-        user_name=auth_data.user_payload.name,
-        user_id=user_account.id,
+        user=User(
+            id=user_account.id,
+            name=auth_data.user_payload.name,
+            avatar=auth_data.user_payload.avatar,
+        ),
     )
 
 
@@ -34,7 +27,7 @@ def login_account(
     auth_code: str,
     auth_provider: IAuthProvider,
     user_account_repo: IUserAccountRepository,
-) -> LoginAccountResponse:
+) -> LoginAccountResult:
     auth_data = auth_provider.authenticate_user(auth_code)
 
     user_account = user_account_repo.get_by_external_id(

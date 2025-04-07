@@ -1,20 +1,24 @@
-from apiflask import Schema, fields
-from apiflask.fields import String, List, Nested
+from apiflask import Schema
+from apiflask.fields import String, List, Nested, AbsoluteURLFor, Hyperlinks
 
 from api.schemas.common import EventListItemSchema
 from application.interfaces.dao.streamer import StreamerDetailsDTO
 
 
 class CreateStreamerRequest(Schema):
-    twitch_id = fields.String(required=True)
-    name = fields.String(required=True)
+    twitch_id = String(required=True)
+    name = String(required=True)
 
 
 class CreateStreamerResponse(Schema):
-    id = fields.String(required=True)
+    id = String(required=True)
 
-    url = fields.Hyperlinks(
-        {"self": fields.URLFor("streamer.get_streamer", values={"streamer_id": "<id>"})}
+    url = Hyperlinks(
+        {
+            "self": AbsoluteURLFor(
+                "streamer.get_streamer", values={"streamer_id": "<id>"}, external=True
+            )
+        }
     )
 
     @classmethod

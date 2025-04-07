@@ -1,10 +1,10 @@
 from apiflask import Schema
-from apiflask.fields import String, URLFor, Nested, Date
+from apiflask.fields import String, Nested, Date, AbsoluteURLFor
 
 
 class ImageSchema(Schema):
     id = String(required=True)
-    url = URLFor("misc.get_image", values={"image_id": "<id>"}, _external=True)
+    url = AbsoluteURLFor("misc.get_image", values={"image_id": "<id>"}, required=True)
 
     @classmethod
     def from_image_id(cls, image_id: str | None):

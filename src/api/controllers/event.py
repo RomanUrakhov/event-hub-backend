@@ -58,6 +58,7 @@ def create_event_blueprint(
     @bp.route("/events/<string:id>", methods=["GET"])
     @bp.output(GetEventByIdResponseSchema)
     @bp.doc(
+        operation_id="getEventById",
         responses={
             404: {
                 "description": "Event not found",
@@ -71,7 +72,7 @@ def create_event_blueprint(
                     }
                 },
             }
-        }
+        },
     )
     def get_event(id: str):
         use_case = GetEventById(event_dao)
@@ -82,6 +83,7 @@ def create_event_blueprint(
         return GetEventByIdResponseSchema.from_dto(event_dto)
 
     @bp.route("/events/", methods=["GET"])
+    @bp.doc(operation_id="listEvents")
     @bp.output(ListAllEventsResponseSchema)
     def list_events():
         # TODO: add pagination
@@ -93,6 +95,7 @@ def create_event_blueprint(
     @bp.input(CreateEventRequestSchema)
     @bp.output(CreateEventResponseSchema, status_code=201)
     @bp.doc(
+        operation_id="createEvent",
         security=[{"TwitchJWTAuth": []}],
         responses={
             403: {
@@ -147,6 +150,7 @@ def create_event_blueprint(
     @bp.route("/events/<string:event_id>/streamers", methods=["POST"])
     @bp.input(EnrollStreamerRequestSchema)
     @bp.doc(
+        operation_id="enrollStreamersOnEvent",
         security=[{"TwitchJWTAuth": []}],
         responses={
             403: {
@@ -199,6 +203,7 @@ def create_event_blueprint(
     @bp.input(AttachHighlightsRequestSchema)
     @bp.output(AttachHighlightsResponseSchema, status_code=201)
     @bp.doc(
+        operation_id="attachHighlightsToEvent",
         security=[{"TwitchJWTAuth": []}],
         responses={
             403: {

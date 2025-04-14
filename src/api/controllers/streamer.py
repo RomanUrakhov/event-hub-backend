@@ -26,7 +26,7 @@ def create_streamer_blueprint(
     bp = APIBlueprint("streamer", __name__)
 
     @bp.route("/streamers", methods=["POST"])
-    @bp.doc(security=[{"TwitchJWTAuth": []}])
+    @bp.doc(operation_id="createStreamer", security=[{"TwitchJWTAuth": []}])
     @bp.input(CreateStreamerRequest)
     @bp.output(CreateStreamerResponse, status_code=201)
     @token_required(auth_provider=auth_provider, account_repository=account_repo)
@@ -44,6 +44,7 @@ def create_streamer_blueprint(
         return CreateStreamerResponse.from_dto(streamer_id=streamer_id)
 
     @bp.route("/streamers/<string:streamer_id>", methods=["GET"])
+    @bp.doc(operation_id="getStreamerById")
     @bp.output(GetStreamerDetailsResponse)
     def get_streamer(streamer_id: str):
         use_case = GetStreamerDetails(streamer_dao)

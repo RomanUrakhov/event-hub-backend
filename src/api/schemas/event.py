@@ -2,30 +2,21 @@
 # TODO: add fields ordering for better client's side expirience
 
 from apiflask import Schema
-from apiflask.fields import String, List, Date, Nested, URL, Integer, URLFor
+from apiflask.fields import String, List, Date, Nested, URL, Integer
 from apiflask.validators import Length
 from apiflask.validators import URL as URLValidator
 from marshmallow import ValidationError, validates_schema
 
-
-class ImageSchema(Schema):
-    id = String(required=True)
-    url = URLFor("misc.get_image", values={"image_id": "<id>"}, _external=True)
-
-    @classmethod
-    def from_image_id(cls, image_id: str | None):
-        if image_id:
-            return {"id": image_id}
-        return None
+from api.schemas.common import EventListItemSchema, ImageSchema
 
 
-class GetEventByIdHighlightSchema(Schema):
+class HighlightSchema(Schema):
     author_id = String(required=True)
     url = URL(required=True, validate=URLValidator())
     attached_datetime = Date(required=True)
 
 
-class GetEventByIdAdditionalLinkSchema(Schema):
+class AdditionalLinkSchema(Schema):
     url = URL(required=True, validate=URLValidator())
     name = String(required=True)
 
@@ -33,12 +24,12 @@ class GetEventByIdAdditionalLinkSchema(Schema):
 class GetEventByIdResponseSchema(Schema):
     id = String(required=True)
     name = String(required=True)
-    image = Nested(ImageSchema, allow_none=True)
+    image = Nested(ImageSchema, nullable=True)
     description = String(allow_none=True)
     start_date = Date(required=True)
     end_date = Date(required=True)
-    additional_links = List(Nested(GetEventByIdAdditionalLinkSchema))
-    highlights = List(Nested(GetEventByIdHighlightSchema))
+    additional_links = List(Nested(AdditionalLinkSchema))
+    highlights = List(Nested(HighlightSchema))
 
     @classmethod
     def from_dto(cls, dto):
@@ -60,24 +51,6 @@ class GetEventByIdResponseSchema(Schema):
                 }
                 for h in dto.highlights
             ],
-        }
-
-
-class EventListItemSchema(Schema):
-    id = String(required=True)
-    name = String(required=True)
-    image = Nested(ImageSchema, allow_none=True)
-    start_date = Date(required=True)
-    end_date = Date(required=True)
-
-    @classmethod
-    def from_dto(cls, dto):
-        return {
-            "id": dto.id,
-            "name": dto.name,
-            "image": ImageSchema.from_image_id(dto.image_id),
-            "start_date": dto.start_date,
-            "end_date": dto.end_date,
         }
 
 

@@ -1,7 +1,7 @@
 from datetime import date
 import re
 
-from domain import Base
+from domain import db
 from domain.exceptions.event import DuplicatedHightlightException
 from domain.models.highlight import Highlight
 
@@ -16,7 +16,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 # TODO: Refactor this part if there's a better solution
 
 
-class EventAdditionalLink(Base):
+class EventAdditionalLink(db.Model):
     __tablename__ = "additional_link"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -25,7 +25,7 @@ class EventAdditionalLink(Base):
     name: Mapped[str] = mapped_column(String, nullable=True)
 
 
-class Event(Base):
+class Event(db.Model):
     __tablename__ = "event"
 
     id: Mapped[str] = mapped_column(String, primary_key=True)

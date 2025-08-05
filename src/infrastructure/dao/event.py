@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session, load_only
+from sqlalchemy.orm import load_only
 
 from datetime import date
 from application.interfaces.dao.event import (
@@ -10,6 +10,7 @@ from application.interfaces.dao.event import (
 )
 from domain.models.event import Event, EventAdditionalLink
 from domain.models.highlight import Highlight
+from infrastructure.dao.base import BaseSQLAlchemyDAO
 
 
 class InMemoryEventDAO(IEventDAO):
@@ -52,12 +53,9 @@ class InMemoryEventDAO(IEventDAO):
         return self._list_events
 
 
-class MySQLEventDAO(IEventDAO):
-    def __init__(self, session: Session):
-        self.session = session
-
+class MySQLEventDAO(BaseSQLAlchemyDAO, IEventDAO):
     def get_event(self, id: str) -> EventDetailsDTO | None:
-        event_query = self.session.query(Event).filter_by(id=id).one_or_none()
+        event_query = self._session.query(Event).filter_by(id=id).one_or_none()
 
         if not event_query:
             return None
@@ -89,9 +87,9 @@ class MySQLEventDAO(IEventDAO):
 
         return detailed_event
 
-    def list_events(self) -> list[EventListItemDTO]:
+    def list_events(self):
         events_query = (
-            self.session.query(Event)
+            self._session.query(Event)
             .options(
                 load_only(
                     Event.id,

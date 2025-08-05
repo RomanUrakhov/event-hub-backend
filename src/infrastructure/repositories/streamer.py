@@ -2,8 +2,7 @@ from typing import Optional
 from application.interfaces.repositories.streamer import IStreamerRepository
 from domain.models.streamer import Streamer
 
-
-from sqlalchemy.orm import Session
+from infrastructure.repositories.base import BaseSQLAlchemyRepository
 
 
 class InMemoryStreamerRepository(IStreamerRepository):
@@ -25,16 +24,13 @@ class InMemoryStreamerRepository(IStreamerRepository):
         return self._streamers.append(streamer)
 
 
-class MySQLStreamerRepository(IStreamerRepository):
-    def __init__(self, session: Session):
-        self._session = session
-
+class MySQLStreamerRepository(BaseSQLAlchemyRepository, IStreamerRepository):
     def check_exists(self, streamer_id: str) -> bool:
         return (
             self._session.query(Streamer).filter_by(id=streamer_id).first() is not None
         )
 
-    def get_by_twitch_id(self, twitch_id: str) -> Streamer:
+    def get_by_twitch_id(self, twitch_id: str) -> Streamer | None:
         return (
             self._session.query(Streamer).filter_by(twitch_id=twitch_id).one_or_none()
         )

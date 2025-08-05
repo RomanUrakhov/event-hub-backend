@@ -6,10 +6,10 @@ from common.helpers import current_datetime_utc
 from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from domain import Base
+from domain import db
 
 
-class Highlight(Base):
+class Highlight(db.Model):
     __tablename__ = "highlight"
 
     url: Mapped[str] = mapped_column(String, primary_key=True)

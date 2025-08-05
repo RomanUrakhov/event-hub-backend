@@ -8,8 +8,9 @@ from domain.models.participation import Participation
 from domain.models.streamer import Streamer
 from domain.models.event import Event
 
-from sqlalchemy.orm import Session
 from sqlalchemy.orm import load_only
+
+from infrastructure.dao.base import BaseSQLAlchemyDAO
 
 
 class InMemoryStreamerDAO(IStreamerDAO):
@@ -21,17 +22,14 @@ class InMemoryStreamerDAO(IStreamerDAO):
         return streamer
 
 
-class MySQLStreamerDAO(IStreamerDAO):
-    def __init__(self, session: Session):
-        self.session = session
-
-    def get_streamer_details(self, streamer_id: str) -> StreamerDetailsDTO | None:
-        streamer = self.session.query(Streamer).filter_by(id=streamer_id).one_or_none()
+class MySQLStreamerDAO(BaseSQLAlchemyDAO, IStreamerDAO):
+    def get_streamer_details(self, streamer_id: str):
+        streamer = self._session.query(Streamer).filter_by(id=streamer_id).one_or_none()
         if not streamer:
             return None
 
         query = (
-            self.session.query(Event)
+            self._session.query(Event)
             .join(Participation, Participation.event_id == Event.id)
             .filter(Participation.streamer_id == streamer_id)
             .options(

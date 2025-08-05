@@ -1,7 +1,7 @@
 from application.interfaces.repositories.event import IEventRepository
 from domain.models.event import Event
 
-from sqlalchemy.orm import Session
+from infrastructure.repositories.base import BaseSQLAlchemyRepository
 
 
 class InMemoryEventRepository(IEventRepository):
@@ -24,10 +24,7 @@ class InMemoryEventRepository(IEventRepository):
         return
 
 
-class MySQLEventRepository(IEventRepository):
-    def __init__(self, session: Session):
-        self._session = session
-
+class MySQLEventRepository(BaseSQLAlchemyRepository, IEventRepository):
     def check_exists(self, event_id: str) -> bool:
         return self._session.query(Event).filter_by(id=event_id).first() is not None
 

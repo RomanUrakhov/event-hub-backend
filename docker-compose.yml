@@ -9,27 +9,37 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    command: ["sh", "-c", "pip install debugpy -t /tmp && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 -m flask run --no-debugger --no-reload --host 0.0.0.0 --port 5000"]
+    command: [ "sh", "-c", "pip install debugpy -t /tmp && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 -m flask run --no-debugger --no-reload --host ${APPLICATION_HOST} --port ${APPLICATION_PORT}" ]
     ports:
-      - 5000:5000
-      - 5678:5678
+      - "${APPLICATION_PORT}:${APPLICATION_PORT}"
+      - "5678:5678"
     networks:
       - event_hub_network
     volumes:
       - .:/event-hub-backend
     environment:
-      - FLASK_APP=wsgi.py
-      - FLASK_ENV=development
-      - APPLICATION_HOST=0.0.0.0
+      - APPLICATION_HOST=$APPLICATION_HOST
+      - APPLICATION_PORT=$APPLICATION_PORT
+      - DB_DRIVER=$DB_DRIVER
+      - DB_HOST=$DB_HOST
+      - DB_PORT=$DB_PORT
+      - DB_USER=$DB_USER
+      - DB_PASSWORD=$DB_PASSWORD
+      - DB_NAME=$DB_NAME
+      - TWITCH_CLIENT_ID=$TWITCH_CLIENT_ID
+      - TWITCH_CLIENT_SECRET=$TWITCH_CLIENT_SECRET
+      - TWITCH_REDIRECT_URI=$TWITCH_REDIRECT_URI
+      - FLASK_APP=$FLASK_APP
+      - FLASK_ENV=$FLASK_ENV
 
   db:
     image: mysql:8.0
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 123
-      MYSQL_DATABASE: event_hub
+      MYSQL_ROOT_PASSWORD: $DB_PASSWORD
+      MYSQL_DATABASE: $DB_NAME
     ports:
-      - "3306:3306"
+      - "${DB_PORT}:${DB_PORT}"
     networks:
       - event_hub_network
     volumes:

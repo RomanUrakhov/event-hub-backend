@@ -1,11 +1,11 @@
-from domain import Base
+from domain import db
 
 from sqlalchemy import ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 
 # TODO: add possibility of tracking who won the event (if it's related)
-class Participation(Base):
+class Participation(db.Model):
     __tablename__ = "participation"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

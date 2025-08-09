@@ -1,15 +1,16 @@
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import load_only, joinedload
 
-from datetime import date
+from datetime import date, datetime
 from application.interfaces.dao.event import (
     EventDetailsAdditionalLinkDTO,
     EventDetailsDTO,
     EventDetailsHighlightDTO,
+    EventDetailsParticipantDTO,
     EventListItemDTO,
     IEventDAO,
 )
-from domain.models.event import Event, EventAdditionalLink
-from domain.models.highlight import Highlight
+from domain.models.event import Event
+from domain.models.participation import Participation
 from infrastructure.dao.base import BaseSQLAlchemyDAO
 
 
@@ -23,10 +24,14 @@ class InMemoryEventDAO(IEventDAO):
             start_date=date.fromisoformat("2024-05-01"),
             end_date=date.fromisoformat("2024-05-10"),
             additional_links=[
-                EventAdditionalLink(url="https://www.twitch.tv/", name="123")
+                EventDetailsAdditionalLinkDTO(url="https://www.twitch.tv/", name="123")
             ],
             highlights=[
-                Highlight(url="https://www.twitch.tv/dota2_paragon_ru", author_id="123")
+                EventDetailsHighlightDTO(
+                    url="https://www.twitch.tv/dota2_paragon_ru",
+                    author_id="123",
+                    attached_datetime=datetime.fromisoformat("2024-05-01T00:00:00Z"),
+                )
             ],
         )
         self._list_events = [
@@ -60,6 +65,21 @@ class MySQLEventDAO(BaseSQLAlchemyDAO, IEventDAO):
         if not event_query:
             return None
 
+        participation_query = (
+            self._session.query(Participation)
+            .options(joinedload(Participation.streamer))
+            .filter(Participation.event_id == id)
+            .all()
+        )
+        participant_dtos = [
+            EventDetailsParticipantDTO(
+                streamer_id=p.streamer.id,
+                twitch_id=p.streamer.twitch_id,
+                name=p.streamer.name,
+            )
+            for p in participation_query
+        ]
+
         hl_dtos = [
             EventDetailsHighlightDTO(
                 author_id=highlight.author_id,
@@ -83,6 +103,7 @@ class MySQLEventDAO(BaseSQLAlchemyDAO, IEventDAO):
             description=event_query.description,
             additional_links=additional_links_dtos,
             highlights=hl_dtos,
+            participants=participant_dtos,
         )
 
         return detailed_event

@@ -17,6 +17,13 @@ class EventDetailsHighlightDTO:
 
 
 @dataclass
+class EventDetailsParticipantDTO:
+    streamer_id: str
+    twitch_id: str
+    name: str
+
+
+@dataclass
 class EventDetailsDTO:
     id: str
     name: str
@@ -26,6 +33,7 @@ class EventDetailsDTO:
     end_date: date
     additional_links: list[EventDetailsAdditionalLinkDTO] = field(default_factory=list)
     highlights: list[EventDetailsHighlightDTO] = field(default_factory=list)
+    participants: list[EventDetailsParticipantDTO] = field(default_factory=list)
 
 
 @dataclass

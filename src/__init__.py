@@ -29,6 +29,7 @@ from infrastructure.repositories.event import (
 from domain import db
 
 from config import Config
+from infrastructure.services.twitch_service import TwitchService
 
 
 def create_app() -> APIFlask:
@@ -65,6 +66,10 @@ def _register_blueprints(app: APIFlask, db: SQLAlchemy):
     event_dao = MySQLEventDAO(db)
     streamer_dao = MySQLStreamerDAO(db)
 
+    twitch_service = TwitchService(
+        app.config["TWITCH_CLIENT_ID"], client_secret=app.config["TWITCH_CLIENT_SECRET"]
+    )
+
     auth_provider = TwitchAuthProvider(
         app.config["TWITCH_CLIENT_ID"],
         app.config["TWITCH_CLIENT_SECRET"],
@@ -83,6 +88,7 @@ def _register_blueprints(app: APIFlask, db: SQLAlchemy):
         streamer_repo=streamer_repo,
         participation_repo=participation_repo,
         event_dao=event_dao,
+        twitch_service=twitch_service,
         account_repo=account_repository,
         account_event_access_repo=account_event_access_repository,
         account_app_access_repo=account_app_access_repo,

@@ -20,6 +20,7 @@ class ParticipantSchema(Schema):
     streamer_id = String(required=True)
     twitch_id = String(required=True)
     name = String(required=True)
+    avatar_url = String(required=True)
 
 
 class AdditionalLinkSchema(Schema):
@@ -60,9 +61,10 @@ class GetEventByIdResponseSchema(Schema):
             ],
             "participants": [
                 {
-                    "streamer_id": p.streamer_id,
+                    "streamer_id": p.id,
                     "twitch_id": p.twitch_id,
                     "name": p.name,
+                    "avatar_url": p.avatar_url,
                 }
                 for p in dto.participants
             ],

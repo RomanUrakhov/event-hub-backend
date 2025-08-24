@@ -31,13 +31,3 @@ class Config:
     TWITCH_CLIENT_ID = os.getenv("TWITCH_CLIENT_ID")
     TWITCH_CLIENT_SECRET = os.getenv("TWITCH_CLIENT_SECRET")
     TWITCH_REDIRECT_URI = os.getenv("TWITCH_REDIRECT_URI")
-
-    # --- API Metadata Settings ---
-    @property
-    def SERVERS(self) -> list[dict]:
-        return [
-            {
-                "name": "Dev Server",
-                "url": f"http://{self.APPLICATION_HOST}:{self.APPLICATION_PORT}",
-            }
-        ]

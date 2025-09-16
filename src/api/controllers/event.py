@@ -11,7 +11,8 @@ from application.interfaces.repositories.account import (
 from application.interfaces.repositories.participation import IParticipationRepository
 from application.interfaces.repositories.streamer import IStreamerRepository
 from application.interfaces.services.auth import IAuthProvider
-from application.use_cases.dto.event import (
+from application.interfaces.services.twitch_service import ITwitchService
+from application.use_cases.dto.event.commands import (
     AttachHighlightsCommand,
     CreateEventCommand,
     EntrollStreamerOnEventCommand,
@@ -47,6 +48,7 @@ def create_event_blueprint(
     auth_provider: IAuthProvider,
     event_repo: IEventRepository,
     event_dao: IEventDAO,
+    twitch_service: ITwitchService,
     streamer_repo: IStreamerRepository,
     participation_repo: IParticipationRepository,
     account_repo: IUserAccountRepository,
@@ -75,7 +77,7 @@ def create_event_blueprint(
         },
     )
     def get_event(id: str):
-        use_case = GetEventById(event_dao)
+        use_case = GetEventById(event_dao, twitch_service)
         try:
             event_dto = use_case(id)
         except EventNotFoundException as e:

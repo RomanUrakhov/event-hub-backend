@@ -1,14 +1,13 @@
 from apiflask import APIFlask
-
 from flask_cors import CORS
-from sqlalchemy import URL, create_engine
-from sqlalchemy.orm import sessionmaker
+from flask_sqlalchemy import SQLAlchemy
 
 from api.controllers.account import create_account_blueprint
 from api.controllers.auth import create_auth_blueprint
 from api.controllers.event import create_event_blueprint
 from api.controllers.misc import create_misc_blueprint
 from api.controllers.streamer import create_streamer_blueprint
+
 from infrastructure.dao.event import MySQLEventDAO
 from infrastructure.dao.streamer import MySQLStreamerDAO
 from infrastructure.repositories.participation import (
@@ -23,15 +22,25 @@ from infrastructure.services.auth import TwitchAuthProvider
 from infrastructure.repositories.streamer import (
     MySQLStreamerRepository,
 )
-from config import Config
 from infrastructure.repositories.event import (
     MySQLEventRepository,
 )
 
+from domain import db
+
+from config import Config
+from infrastructure.services.twitch_service import TwitchService
+
 
 def create_app() -> APIFlask:
     app = APIFlask(__name__, docs_ui="redoc")
+
+    config = Config()
+    app.config.from_object(config)
+
     CORS(app, resources={r"/*": {"origins": "*"}})
+    db.init_app(app)
+
     app.security_schemes = app.security_schemes = {
         "TwitchJWTAuth": {
             "type": "http",
@@ -40,45 +49,26 @@ def create_app() -> APIFlask:
             "description": "JWT token from Twitch, passed in the Authorization header as 'Bearer <token>'.",
         }
     }
-    app.config["SERVERS"] = [
-        # TODO: should this 'localhost' hardcodes be configurated? I think so...
-        {"name": "Dev Server", "url": "http://localhost:5000"},
-        # TODO: add production-ready server when it's ready :)
-    ]
 
-    config = Config()
-    app.config.from_object(config)
-
-    engine = create_engine(
-        URL.create(
-            drivername=config.DB_DRIVER,
-            username=config.DB_USER,
-            password=config.DB_PASSWORD,
-            host=config.DB_HOST,
-            port=int(config.DB_PORT),
-            database=config.DB_NAME,
-        )
-    )
-    session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-    _register_blueprints(app, session_factory)
+    _register_blueprints(app, db)
 
     return app
 
 
-def _register_blueprints(app: APIFlask, session_factory):
-    # TODO: maybe create a session per request - not on app startup
-    session = session_factory()
+def _register_blueprints(app: APIFlask, db: SQLAlchemy):
+    event_repo = MySQLEventRepository(db)
+    streamer_repo = MySQLStreamerRepository(db)
+    participation_repo = MySQLParticipationRepository(db)
+    account_repository = MySQLUserAccountRepository(db)
+    account_event_access_repository = MySQLAccountEventAccessRepository(db)
+    account_app_access_repo = MySQLAccountAppAccessRepository(db)
 
-    event_repo = MySQLEventRepository(session)
-    streamer_repo = MySQLStreamerRepository(session)
-    participation_repo = MySQLParticipationRepository(session)
-    account_repository = MySQLUserAccountRepository(session)
-    account_event_access_repository = MySQLAccountEventAccessRepository(session)
-    account_app_access_repo = MySQLAccountAppAccessRepository(session)
+    event_dao = MySQLEventDAO(db)
+    streamer_dao = MySQLStreamerDAO(db)
 
-    event_dao = MySQLEventDAO(session)
-    streamer_dao = MySQLStreamerDAO(session)
+    twitch_service = TwitchService(
+        app.config["TWITCH_CLIENT_ID"], client_secret=app.config["TWITCH_CLIENT_SECRET"]
+    )
 
     auth_provider = TwitchAuthProvider(
         app.config["TWITCH_CLIENT_ID"],
@@ -98,6 +88,7 @@ def _register_blueprints(app: APIFlask, session_factory):
         streamer_repo=streamer_repo,
         participation_repo=participation_repo,
         event_dao=event_dao,
+        twitch_service=twitch_service,
         account_repo=account_repository,
         account_event_access_repo=account_event_access_repository,
         account_app_access_repo=account_app_access_repo,

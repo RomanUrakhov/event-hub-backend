@@ -5,7 +5,7 @@ from domain.models.account import AccountEventAccess, UserAccount
 
 class IUserAccountRepository(ABC):
     @abstractmethod
-    def get_by_external_id(self, id: str) -> UserAccount:
+    def get_by_external_id(self, id: str) -> UserAccount | None:
         pass
 
     @abstractmethod

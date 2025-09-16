@@ -16,6 +16,13 @@ class HighlightSchema(Schema):
     attached_datetime = Date(required=True)
 
 
+class ParticipantSchema(Schema):
+    streamer_id = String(required=True)
+    twitch_id = String(required=True)
+    name = String(required=True)
+    avatar_url = String(required=True)
+
+
 class AdditionalLinkSchema(Schema):
     url = URL(required=True, validate=URLValidator())
     name = String(required=True)
@@ -30,6 +37,7 @@ class GetEventByIdResponseSchema(Schema):
     end_date = Date(required=True)
     additional_links = List(Nested(AdditionalLinkSchema))
     highlights = List(Nested(HighlightSchema))
+    participants = List(Nested(ParticipantSchema))
 
     @classmethod
     def from_dto(cls, dto):
@@ -50,6 +58,15 @@ class GetEventByIdResponseSchema(Schema):
                     "attached_datetime": h.attached_datetime,
                 }
                 for h in dto.highlights
+            ],
+            "participants": [
+                {
+                    "streamer_id": p.id,
+                    "twitch_id": p.twitch_id,
+                    "name": p.name,
+                    "avatar_url": p.avatar_url,
+                }
+                for p in dto.participants
             ],
         }
 

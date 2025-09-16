@@ -4,6 +4,7 @@ from api.schemas.streamer import (
     CreateStreamerRequest,
     CreateStreamerResponse,
     GetStreamerDetailsResponse,
+    StreamerExistsErrorSchema,
 )
 from application.interfaces.dao.streamer import IStreamerDAO
 from application.interfaces.repositories.account import IUserAccountRepository
@@ -26,7 +27,20 @@ def create_streamer_blueprint(
     bp = APIBlueprint("streamer", __name__)
 
     @bp.route("/streamers", methods=["POST"])
-    @bp.doc(operation_id="createStreamer", security=[{"TwitchJWTAuth": []}])
+    @bp.doc(
+        operation_id="createStreamer",
+        security=[{"TwitchJWTAuth": []}],
+        responses={
+            409: {
+                "description": "Conflict error",
+                "content": {
+                    "application/json": {
+                        "schema": {"oneOf": [StreamerExistsErrorSchema]}
+                    }
+                },
+            }
+        },
+    )
     @bp.input(CreateStreamerRequest)
     @bp.output(CreateStreamerResponse, status_code=201)
     @token_required(auth_provider=auth_provider, account_repository=account_repo)
@@ -39,7 +53,11 @@ def create_streamer_blueprint(
             abort(
                 409,
                 str(e),
-                detail={"streamer_id": e.streamer_id, "twitch_id": e.twitch_id},
+                detail={
+                    "code": "STREAMER_EXISTS",
+                    "streamer_id": e.streamer_id,
+                    "twitch_id": e.twitch_id,
+                },
             )
         return CreateStreamerResponse.from_dto(streamer_id=streamer_id)
 

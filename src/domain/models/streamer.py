@@ -1,10 +1,10 @@
-from domain import Base
+from domain import db
 
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 
 
-class Streamer(Base):
+class Streamer(db.Model):
     __tablename__ = "streamer"
 
     id: Mapped[str] = mapped_column(String, primary_key=True)

@@ -26,6 +26,24 @@ class CreateStreamerResponse(Schema):
         return {"id": streamer_id}
 
 
+class StreamerExistsErrorDetailSchema(Schema):
+    code = String(
+        required=True,
+        dump_only=True,
+        default="STREAMER_EXISTS",
+        metadata={
+            "enum": ["STREAMER_EXISTS"],
+        },
+    )
+    streamer_id = String(required=True)
+    twitch_id = String(required=True)
+
+
+class StreamerExistsErrorSchema(Schema):
+    message = String(required=True)
+    detail = Nested(StreamerExistsErrorDetailSchema, required=True)
+
+
 class GetStreamerDetailsResponse(Schema):
     id = String()
     twitch_id = String()

@@ -4,34 +4,27 @@ from application.interfaces.repositories.account import (
     IUserAccountRepository,
 )
 
-from sqlalchemy.orm import Session
-
 from domain.models.account import AccountAppAccess, AccountEventAccess, UserAccount
+from infrastructure.repositories.base import BaseSQLAlchemyRepository
 
 
-class MySQLUserAccountRepository(IUserAccountRepository):
-    def __init__(self, session: Session):
-        self._session = session
-
-    def get_by_external_id(self, external_id: str) -> UserAccount:
+class MySQLUserAccountRepository(BaseSQLAlchemyRepository, IUserAccountRepository):
+    def get_by_external_id(self, external_id: str):
         return (
             self._session.query(UserAccount)
             .filter(UserAccount.twitch_id == external_id)
             .first()
         )
 
-    def create_account(self, account: UserAccount) -> None:
+    def create_account(self, account: UserAccount):
         self._session.add(account)
         self._session.commit()
 
 
-class MySQLAccountEventAccessRepository(IAccountEventAccessRepository):
-    def __init__(self, session: Session):
-        self._session = session
-
-    def get_account_access(
-        self, account_id: str, event_id: str
-    ) -> AccountEventAccess | None:
+class MySQLAccountEventAccessRepository(
+    BaseSQLAlchemyRepository, IAccountEventAccessRepository
+):
+    def get_account_access(self, account_id: str, event_id: str):
         return (
             self._session.query(AccountEventAccess)
             .filter(
@@ -41,7 +34,7 @@ class MySQLAccountEventAccessRepository(IAccountEventAccessRepository):
             .one_or_none()
         )
 
-    def list_account_accesses(self, account_id: str) -> list[AccountEventAccess]:
+    def list_account_accesses(self, account_id: str):
         return (
             self._session.query(AccountEventAccess)
             .filter(AccountEventAccess.account_id == account_id)
@@ -49,11 +42,10 @@ class MySQLAccountEventAccessRepository(IAccountEventAccessRepository):
         )
 
 
-class MySQLAccountAppAccessRepository(IAccountAppAccessRepository):
-    def __init__(self, session: Session):
-        self._session = session
-
-    def account_has_global_access(self, account_id: str) -> bool:
+class MySQLAccountAppAccessRepository(
+    BaseSQLAlchemyRepository, IAccountAppAccessRepository
+):
+    def account_has_global_access(self, account_id: str):
         """Check if a user has a record in account_app_access (meaning they have global admin access)."""
         return (
             self._session.query(AccountAppAccess)

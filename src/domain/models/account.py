@@ -1,12 +1,12 @@
 from enum import Enum
 
-from domain import Base
+from domain import db
 
 from sqlalchemy import ForeignKey, Integer, String, Enum as SqlEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
-class UserAccount(Base):
+class UserAccount(db.Model):
     __tablename__ = "user_account"
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
@@ -19,7 +19,7 @@ class RoleName(Enum):
     PARTICIPANT = "Participant"
 
 
-class EventRole(Base):
+class EventRole(db.Model):
     __tablename__ = "event_role"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -32,7 +32,7 @@ class EventRole(Base):
     )
 
 
-class AccountEventAccess(Base):
+class AccountEventAccess(db.Model):
     __tablename__ = "account_event_access"
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
@@ -51,7 +51,7 @@ class AccountEventAccess(Base):
         return self.role.name in (RoleName.ADMIN, RoleName.MODERATOR)
 
 
-class AccountAppAccess(Base):
+class AccountAppAccess(db.Model):
     __tablename__ = "account_app_access"
 
     id: Mapped[str] = mapped_column(String, primary_key=True)

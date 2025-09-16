@@ -1,7 +1,7 @@
 from application.interfaces.repositories.participation import IParticipationRepository
 from domain.models.participation import Participation
 
-from sqlalchemy.orm import Session
+from infrastructure.repositories.base import BaseSQLAlchemyRepository
 
 
 class InMemoryParticipationRepository(IParticipationRepository):
@@ -26,22 +26,19 @@ class InMemoryParticipationRepository(IParticipationRepository):
         self._participations.extend(participations)
 
 
-class MySQLParticipationRepository(IParticipationRepository):
-    def __init__(self, session: Session):
-        self.session = session
-
+class MySQLParticipationRepository(BaseSQLAlchemyRepository, IParticipationRepository):
     def check_exists(self, event_id: str, streamer_id: str) -> bool:
         return (
-            self.session.query(Participation)
+            self._session.query(Participation)
             .filter_by(event_id=event_id, streamer_id=streamer_id)
             .first()
             is not None
         )
 
     def save(self, participation: Participation):
-        self.session.add(participation)
-        self.session.commit()
+        self._session.add(participation)
+        self._session.commit()
 
     def save_batch(self, participations: list[Participation]):
-        self.session.bulk_save_objects(participations)
-        self.session.commit()
+        self._session.bulk_save_objects(participations)
+        self._session.commit()

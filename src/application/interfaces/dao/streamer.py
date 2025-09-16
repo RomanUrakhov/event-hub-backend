@@ -27,5 +27,5 @@ class StreamerDetailsDTO:
 
 class IStreamerDAO(ABC):
     @abstractmethod
-    def get_streamer_details(self, streamer_id) -> StreamerDetailsDTO:
+    def get_streamer_details(self, streamer_id) -> StreamerDetailsDTO | None:
         pass

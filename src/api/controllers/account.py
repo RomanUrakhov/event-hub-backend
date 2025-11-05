@@ -4,20 +4,16 @@ from api.schemas.account import (
     AccountAccessQueryParams,
     AccountAccessSchema,
 )
-from application.interfaces.services.auth import IAuthProvider
 from application.interfaces.repositories.account import (
     IAccountAppAccessRepository,
     IAccountEventAccessRepository,
-    IUserAccountRepository,
 )
-from api.controllers.auth import token_required
 
 
 def create_account_blueprint(
-    account_repo: IUserAccountRepository,
     account_event_access_repo: IAccountEventAccessRepository,
     account_app_access_repo: IAccountAppAccessRepository,
-    auth_provider: IAuthProvider,
+    auth_required,
 ):
     bp = APIBlueprint("account", __name__)
 
@@ -32,10 +28,10 @@ def create_account_blueprint(
         }
 
     @bp.route("/account/access", methods=["GET"])
-    @bp.doc(operation_id="getAccountAccess", security=[{"TwitchJWTAuth": []}])
+    @bp.doc(operation_id="getAccountAccess", security=[{"InternalBearerAuth": []}])
     @bp.input(AccountAccessQueryParams, location="query")
     @bp.output(AccountAccessSchema)
-    @token_required(auth_provider=auth_provider, account_repository=account_repo)
+    @auth_required
     def get_account_access(query_data):
         user_account = g.user_account
         event_id = query_data.get("event_id")

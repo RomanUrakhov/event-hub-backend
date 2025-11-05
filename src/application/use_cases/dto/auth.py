@@ -8,6 +8,5 @@ class User(BaseModel):
 
 
 class LoginAccountResult(BaseModel):
-    id_token: str
-    refresh_token: str
+    session_token: str
     user: User

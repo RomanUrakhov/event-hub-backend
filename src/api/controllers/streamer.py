@@ -1,5 +1,4 @@
 from apiflask import APIBlueprint, abort
-from api.controllers.auth import token_required
 from api.schemas.streamer import (
     CreateStreamerRequest,
     CreateStreamerResponse,
@@ -7,8 +6,6 @@ from api.schemas.streamer import (
     StreamerExistsErrorSchema,
 )
 from application.interfaces.dao.streamer import IStreamerDAO
-from application.interfaces.repositories.account import IUserAccountRepository
-from application.interfaces.services.auth import IAuthProvider
 from application.use_cases.dto.streamer import CreateStreamerCommand
 from application.interfaces.repositories.streamer import IStreamerRepository
 from application.use_cases.streamer import CreateStreamer, GetStreamerDetails
@@ -21,15 +18,14 @@ from domain.exceptions.streamer import (
 def create_streamer_blueprint(
     streamer_repository: IStreamerRepository,
     streamer_dao: IStreamerDAO,
-    auth_provider: IAuthProvider,
-    account_repo: IUserAccountRepository,
+    auth_required,
 ):
     bp = APIBlueprint("streamer", __name__)
 
     @bp.route("/streamers", methods=["POST"])
     @bp.doc(
         operation_id="createStreamer",
-        security=[{"TwitchJWTAuth": []}],
+        security=[{"InternalBearerAuth": []}],
         responses={
             409: {
                 "description": "Conflict error",
@@ -43,7 +39,7 @@ def create_streamer_blueprint(
     )
     @bp.input(CreateStreamerRequest)
     @bp.output(CreateStreamerResponse, status_code=201)
-    @token_required(auth_provider=auth_provider, account_repository=account_repo)
+    @auth_required
     def create_streamer(json_data):
         command = CreateStreamerCommand.model_validate(json_data)
         use_case = CreateStreamer(streamer_repository)

@@ -13,6 +13,9 @@ class UserSchema(Schema):
 
 
 class AuthWithTwitchResponseSchema(Schema):
-    id_token = String(required=True)
-    refresh_token = String(required=True)
-    user = Nested(UserSchema)
+    session_token = String(required=True)
+    user = Nested(UserSchema, required=True)
+
+
+class RefreshTokenResponseSchema(Schema):
+    session_token = String(required=True)

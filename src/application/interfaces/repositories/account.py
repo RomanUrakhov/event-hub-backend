@@ -5,11 +5,15 @@ from domain.models.account import AccountEventAccess, UserAccount
 
 class IUserAccountRepository(ABC):
     @abstractmethod
+    def get_by_id(self, user_id: str) -> UserAccount | None:
+        pass
+
+    @abstractmethod
     def get_by_external_id(self, id: str) -> UserAccount | None:
         pass
 
     @abstractmethod
-    def create_account(self, data: dict):
+    def save(self, account: UserAccount):
         pass
 
 

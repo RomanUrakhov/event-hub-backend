@@ -9,6 +9,9 @@ from infrastructure.repositories.base import BaseSQLAlchemyRepository
 
 
 class MySQLUserAccountRepository(BaseSQLAlchemyRepository, IUserAccountRepository):
+    def get_by_id(self, user_id: str) -> UserAccount | None:
+        return self._session.query(UserAccount).get(user_id)
+
     def get_by_external_id(self, external_id: str):
         return (
             self._session.query(UserAccount)
@@ -16,9 +19,13 @@ class MySQLUserAccountRepository(BaseSQLAlchemyRepository, IUserAccountRepositor
             .first()
         )
 
-    def create_account(self, account: UserAccount):
-        self._session.add(account)
-        self._session.commit()
+    def save(self, account: UserAccount):
+        try:
+            self._session.add(account)
+            self._session.commit()
+        except:
+            self._session.rollback()
+            raise
 
 
 class MySQLAccountEventAccessRepository(

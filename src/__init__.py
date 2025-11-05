@@ -3,7 +3,7 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 
 from api.controllers.account import create_account_blueprint
-from api.controllers.auth import create_auth_blueprint
+from api.controllers.auth import create_auth_blueprint, token_required
 from api.controllers.event import create_event_blueprint
 from api.controllers.misc import create_misc_blueprint
 from api.controllers.streamer import create_streamer_blueprint
@@ -42,11 +42,11 @@ def create_app() -> APIFlask:
     db.init_app(app)
 
     app.security_schemes = app.security_schemes = {
-        "TwitchJWTAuth": {
+        "InternalBearerAuth": {
             "type": "http",
             "scheme": "bearer",
             "bearerFormat": "JWT",
-            "description": "JWT token from Twitch, passed in the Authorization header as 'Bearer <token>'.",
+            "description": "Internal app JWT, passed in the Authorization header as 'Bearer <token>'.",
         }
     }
 
@@ -76,43 +76,44 @@ def _register_blueprints(app: APIFlask, db: SQLAlchemy):
         app.config["TWITCH_REDIRECT_URI"],
     )
 
+    auth_required = token_required(account_repository)
+
     # TODO: find the way to setup global API prefix at once and not duplicate for every blueprint
     auth_bp = create_auth_blueprint(
-        auth_provider=auth_provider, account_repository=account_repository
+        auth_provider=auth_provider,
+        account_repository=account_repository,
+        secret_key=app.config["JWT_SECRET_KEY"],
     )
     app.register_blueprint(auth_bp, url_prefix=app.config["APPLICATION_ROOT"])
 
     event_bp = create_event_blueprint(
-        auth_provider=auth_provider,
         event_repo=event_repo,
         streamer_repo=streamer_repo,
         participation_repo=participation_repo,
         event_dao=event_dao,
         twitch_service=twitch_service,
-        account_repo=account_repository,
         account_event_access_repo=account_event_access_repository,
         account_app_access_repo=account_app_access_repo,
+        auth_required=auth_required,
     )
     app.register_blueprint(event_bp, url_prefix=app.config["APPLICATION_ROOT"])
 
     misc_bp = create_misc_blueprint(
-        auth_provider=auth_provider, account_repository=account_repository
+        auth_required=auth_required,
     )
     app.register_blueprint(misc_bp, url_prefix=app.config["APPLICATION_ROOT"])
 
     streamer_bp = create_streamer_blueprint(
         streamer_repository=streamer_repo,
         streamer_dao=streamer_dao,
-        auth_provider=auth_provider,
-        account_repo=account_repository,
+        auth_required=auth_required,
     )
     app.register_blueprint(streamer_bp, url_prefix=app.config["APPLICATION_ROOT"])
 
     account_bp = create_account_blueprint(
-        account_repo=account_repository,
         account_event_access_repo=account_event_access_repository,
         account_app_access_repo=account_app_access_repo,
-        auth_provider=auth_provider,
+        auth_required=auth_required,
     )
     app.register_blueprint(account_bp, url_prefix=app.config["APPLICATION_ROOT"])
 

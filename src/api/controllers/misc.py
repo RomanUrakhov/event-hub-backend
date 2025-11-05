@@ -4,10 +4,7 @@ from apiflask import APIBlueprint, FileSchema, abort
 from werkzeug.utils import secure_filename
 from uuid import uuid4
 
-from api.controllers.auth import token_required
 from api.schemas.misc import UploadImageResponseSchema, UploadImageSchema
-from application.interfaces.repositories.account import IUserAccountRepository
-from application.interfaces.services.auth import IAuthProvider
 
 # TODO: refactor this mess: standardize image storing (single type), image scaling, etc.
 
@@ -19,7 +16,7 @@ def allowed_file(filename: str) -> bool:
 
 
 def create_misc_blueprint(
-    auth_provider: IAuthProvider, account_repository: IUserAccountRepository
+    auth_required,
 ):
     bp = APIBlueprint("misc", __name__)
 
@@ -33,10 +30,10 @@ def create_misc_blueprint(
         return response
 
     @bp.route("/images", methods=["POST"])
-    @bp.doc(operation_id="uploadImage", security=[{"TwitchJWTAuth": []}])
+    @bp.doc(operation_id="uploadImage", security=[{"InternalBearerAuth": []}])
     @bp.input(UploadImageSchema, location="files")
     @bp.output(UploadImageResponseSchema, 201)
-    @token_required(auth_provider=auth_provider, account_repository=account_repository)
+    @auth_required
     def upload_image(files_data):
         file = files_data["file"]
 

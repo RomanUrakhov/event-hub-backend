@@ -1,16 +1,13 @@
 from flask import g, url_for
 from apiflask import APIBlueprint, abort
 
-from api.controllers.auth import token_required
 from application.interfaces.dao.event import IEventDAO
 from application.interfaces.repositories.account import (
     IAccountAppAccessRepository,
     IAccountEventAccessRepository,
-    IUserAccountRepository,
 )
 from application.interfaces.repositories.participation import IParticipationRepository
 from application.interfaces.repositories.streamer import IStreamerRepository
-from application.interfaces.services.auth import IAuthProvider
 from application.interfaces.services.twitch_service import ITwitchService
 from application.use_cases.dto.event.commands import (
     AttachHighlightsCommand,
@@ -45,15 +42,14 @@ from src.application.use_cases.event import (
 
 
 def create_event_blueprint(
-    auth_provider: IAuthProvider,
     event_repo: IEventRepository,
     event_dao: IEventDAO,
     twitch_service: ITwitchService,
     streamer_repo: IStreamerRepository,
     participation_repo: IParticipationRepository,
-    account_repo: IUserAccountRepository,
     account_event_access_repo: IAccountEventAccessRepository,
     account_app_access_repo: IAccountAppAccessRepository,
+    auth_required,
 ):
     bp = APIBlueprint("event", __name__)
 
@@ -96,9 +92,10 @@ def create_event_blueprint(
     @bp.route("/events", methods=["POST"])
     @bp.input(CreateEventRequestSchema)
     @bp.output(CreateEventResponseSchema, status_code=201)
+    @auth_required
     @bp.doc(
         operation_id="createEvent",
-        security=[{"TwitchJWTAuth": []}],
+        security=[{"InternalBearerAuth": []}],
         responses={
             403: {
                 "description": "Forbidden - No creator access",
@@ -126,7 +123,6 @@ def create_event_blueprint(
             },
         },
     )
-    @token_required(auth_provider=auth_provider, account_repository=account_repo)
     def create_event(json_data):
         user_account: UserAccount = g.user_account
         json_data["author_id"] = user_account.id
@@ -151,9 +147,10 @@ def create_event_blueprint(
 
     @bp.route("/events/<string:event_id>/streamers", methods=["POST"])
     @bp.input(EnrollStreamerRequestSchema)
+    @auth_required
     @bp.doc(
         operation_id="enrollStreamersOnEvent",
-        security=[{"TwitchJWTAuth": []}],
+        security=[{"InternalBearerAuth": []}],
         responses={
             403: {
                 "description": "Forbidden - User lacks access",
@@ -181,7 +178,6 @@ def create_event_blueprint(
             },
         },
     )
-    @token_required(auth_provider=auth_provider, account_repository=account_repo)
     def entroll_streamer_on_event(event_id: str, json_data):
         user_account: UserAccount = g.user_account
         json_data["event_id"] = event_id
@@ -204,9 +200,10 @@ def create_event_blueprint(
     @bp.route("/events/<string:event_id>/hightlights", methods=["POST"])
     @bp.input(AttachHighlightsRequestSchema)
     @bp.output(AttachHighlightsResponseSchema, status_code=201)
+    @auth_required
     @bp.doc(
         operation_id="attachHighlightsToEvent",
-        security=[{"TwitchJWTAuth": []}],
+        security=[{"InternalBearerAuth": []}],
         responses={
             403: {
                 "description": "Forbidden - User lacks access",
@@ -234,7 +231,6 @@ def create_event_blueprint(
             },
         },
     )
-    @token_required(auth_provider=auth_provider, account_repository=account_repo)
     def attach_highlights(event_id: str, json_data):
         user_account: UserAccount = g.user_account
         json_data["event_id"] = event_id

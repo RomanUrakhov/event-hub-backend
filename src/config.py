@@ -12,6 +12,7 @@ class Config:
     APPLICATION_ROOT = "/api"
     # TODO: deal with processing static files
     APPLICATION_STATIC_DIR = "static/images"
+    JWT_SECRET_KEY = os.environ["JWT_SECRET_KEY"]
 
     # --- Database Settings ---
     DB_DRIVER = os.getenv("DB_DRIVER", "")
